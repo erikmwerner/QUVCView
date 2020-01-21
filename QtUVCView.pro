@@ -16,11 +16,20 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    cameraview.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    uvccapture.cpp \
+    uvccapturesettings.cpp \
+    uvccontrolwidget.cpp
 
 HEADERS += \
-    mainwindow.h
+    cameraview.h \
+    mainwindow.h \
+    utlist.h \
+    uvccapture.h \
+    uvccapturesettings.h \
+    uvccontrolwidget.h
 
 OPENCV_PATH = /usr/local/Cellar/opencv/4.2.0_1
 LIBS += -L/$$OPENCV_PATH/lib/ \
@@ -49,7 +58,9 @@ INCLUDEPATH += $$LIBUVC_PATH/include
 DEPENDPATH += $$LIBUVC_PATH/include
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    uvccapturesettings.ui \
+    uvccontrolwidget.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

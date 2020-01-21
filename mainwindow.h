@@ -7,7 +7,36 @@
 
 #include <QDebug>
 
+typedef enum	{
+    UVC_AUTO_EXPOSURE_MODE_UNDEFINED = 0x00,	///	undefined auto exposure mode
+    UVC_AUTO_EXPOSURE_MODE_MANUAL = 0x01,	///	manual exposure, manual iris
+    UVC_AUTO_EXPOSURE_MODE_AUTO = 0x02,	///	auto exposure, auto iris
+    UVC_AUTO_EXPOSURE_MODE_SHUTTER_PRIORITY = 0x04,	///	manual exposure, auto iris
+    UVC_AUTO_EXPOSURE_MODE_APERTURE_PRIORITY = 0x08	///	auto exposure, manual iris
+} UVC_AEMode;
+
+/*	IMPORTANT: ALL THESE DEFINES WERE TAKEN FROM THE USB SPECIFICATION:
+    http://www.usb.org/developers/docs/devclass_docs/USB_Video_Class_1_1_090711.zip			*/
+
+#define UVC_CONTROL_INTERFACE_CLASS 0x0E
+#define UVC_CONTROL_INTERFACE_SUBCLASS 0x01
+
+//	video class-specific request codes
+#define UVC_SET_CUR	0x01
+#define UVC_GET_CUR	0x81
+#define UVC_GET_MIN	0x82
+#define UVC_GET_MAX	0x83
+#define UVC_GET_RES 0x84
+#define UVC_GET_LEN 0x85
+#define UVC_GET_INFO 0x86
+#define UVC_GET_DEF 0x87
+
+
+
 class QDockWidget;
+class QGraphicsPixmapItem;
+class CameraView;
+class UVCCapture;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -21,19 +50,17 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    //void callback(uvc_frame_t *frame, void *ptr);
-
-    int initUVC();
-
-    void UVCClose();
-
-    void handleFrame(uvc_frame_t *bgr);
-
 public slots:
-    void grabFrame();
+    void handleFrame(const cv::Mat &frame, const int frame_number);
+
+    uvc_device_handle_t* handle() {return devh;}
+
 private:
     Ui::MainWindow *ui;
     QDockWidget* _settings_widget = nullptr;
+    UVCCapture* m_capture = nullptr;
+
+
 
     uvc_context_t *ctx;
     uvc_device_t *dev;
@@ -42,10 +69,8 @@ private:
     uvc_error_t res;
 
     uvc_stream_handle_t *strmhp;
-
-    QTimer* m_capture_timer = nullptr;
+    QPixmap m_pix;
     cv::Mat m_frame;
-
 };
 
 static inline QImage  cvMatToQImage( const cv::Mat &inMat )
