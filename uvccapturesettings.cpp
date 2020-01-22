@@ -9,25 +9,25 @@
 #include <QMetaType>
 #include <QDebug>
 
-UVCCaptureSettings::UVCCaptureSettings(UVCCapture *parent) :
-    QWidget(), ui(new Ui::UVCCaptureSettings), m_parent(parent)
+UVCCaptureSettings::UVCCaptureSettings(UVCCapture *capture, QWidget* parent) :
+    QWidget(parent), ui(new Ui::UVCCaptureSettings)
 {
     ui->setupUi(this);
 
-    connect(parent, &UVCCapture::foundDevices,
+    connect(capture, &UVCCapture::foundDevices,
             this,&UVCCaptureSettings::onDevicesFound);
-    connect(parent, &UVCCapture::foundCaptureProperties,
+    connect(capture, &UVCCapture::foundCaptureProperties,
             this,&UVCCaptureSettings::onSupportedFormatsFound);
     connect(ui->pushButtonRefresh, &QPushButton::clicked,
-            parent,&UVCCapture::findDevices);
+            capture,&UVCCapture::findDevices);
     connect(ui->pushButtonConnect, &QPushButton::clicked,
-            parent,&UVCCapture::startStream);
+            this, &UVCCaptureSettings::startCapture);
     connect(ui->pushButtonDisconnect, &QPushButton::clicked,
-            parent,&UVCCapture::stopStream);
+            this, &UVCCaptureSettings::stopCapture);
     connect(this, &UVCCaptureSettings::openDevice,
-            parent, &UVCCapture::openDevice);
+            capture, &UVCCapture::openDevice);
     connect(this, &UVCCaptureSettings::capturePropertiesChanged,
-            parent, &UVCCapture::setCaptureProperties);
+            capture, &UVCCapture::setCaptureProperties);
 
     ////////////////////////
     // add control widgets //
@@ -41,16 +41,16 @@ UVCCaptureSettings::UVCCaptureSettings(UVCCapture *parent) :
     QVector<QString>mode_text;
     UVCControlWidget* w = new UVCControlWidget("Exposure", modes, " us*100", this);
     connect(w, &UVCControlWidget::requestMode,
-            parent->controls(), &UVCCaptureControls::getExposureMode);
+            capture->controls(), &UVCCaptureControls::getExposureMode);
     connect(w, &UVCControlWidget::modeChanged,
-            parent->controls(), &UVCCaptureControls::setExposureMode);
+            capture->controls(), &UVCCaptureControls::setExposureMode);
     connect(w, &UVCControlWidget::requestValue,
-            parent->controls(), &UVCCaptureControls::getAbsExposure);
+            capture->controls(), &UVCCaptureControls::getAbsExposure);
     connect(w, &UVCControlWidget::valueChanged,
-            parent->controls(), &UVCCaptureControls::setAbsExposure);
-    connect(parent->controls(), &UVCCaptureControls::exposureMode,
+            capture->controls(), &UVCCaptureControls::setAbsExposure);
+    connect(capture->controls(), &UVCCaptureControls::exposureMode,
             w, &UVCControlWidget::setMode);
-    connect(parent->controls(), &UVCCaptureControls::exposure,
+    connect(capture->controls(), &UVCCaptureControls::exposure,
             w, &UVCControlWidget::setValue);
     w->setRange(50, 10000);
     w->setDefaultMode(8);
@@ -63,16 +63,16 @@ UVCCaptureSettings::UVCCaptureSettings(UVCCapture *parent) :
     modes.append(QPair<int, QString>(0,"Auto"));
     w = new UVCControlWidget("Focus", modes, " mm", this);
     connect(w, &UVCControlWidget::requestMode,
-           parent->controls(), &UVCCaptureControls::getFocusMode);
+           capture->controls(), &UVCCaptureControls::getFocusMode);
     connect(w, &UVCControlWidget::modeChanged,
-            parent->controls(), &UVCCaptureControls::setFocusMode);
+            capture->controls(), &UVCCaptureControls::setFocusMode);
     connect(w, &UVCControlWidget::requestValue,
-            parent->controls(), &UVCCaptureControls::getAbsoluteFocus);
+            capture->controls(), &UVCCaptureControls::getAbsoluteFocus);
     connect(w, &UVCControlWidget::valueChanged,
-            parent->controls(), &UVCCaptureControls::setAbsoluteFocus);
-    connect(parent->controls(), &UVCCaptureControls::focusMode,
+            capture->controls(), &UVCCaptureControls::setAbsoluteFocus);
+    connect(capture->controls(), &UVCCaptureControls::focusMode,
             w, &UVCControlWidget::setMode);
-    connect(parent->controls(), &UVCCaptureControls::absoluteFocus,
+    connect(capture->controls(), &UVCCaptureControls::absoluteFocus,
             w, &UVCControlWidget::setValue);
     w->setRange(0, 1023);
     w->setDefaultMode(1);
@@ -82,10 +82,10 @@ UVCCaptureSettings::UVCCaptureSettings(UVCCapture *parent) :
     modes.clear();
     w = new UVCControlWidget("Backlight Compensation", modes, "", this);
     connect(w, &UVCControlWidget::requestValue,
-            parent->controls(), &UVCCaptureControls::getBackLightCompensation);
+            capture->controls(), &UVCCaptureControls::getBackLightCompensation);
     connect(w, &UVCControlWidget::valueChanged,
-            parent->controls(), &UVCCaptureControls::setBackLightCompensation);
-    connect(parent->controls(), &UVCCaptureControls::backlightCompensation,
+            capture->controls(), &UVCCaptureControls::setBackLightCompensation);
+    connect(capture->controls(), &UVCCaptureControls::backlightCompensation,
             w, &UVCControlWidget::setValue);
     w->setRange(0, 1);
     w->setDefaultValue(0);
@@ -95,10 +95,10 @@ UVCCaptureSettings::UVCCaptureSettings(UVCCapture *parent) :
     modes.clear();
     w = new UVCControlWidget("Brightness", modes, "", this);
     connect(w, &UVCControlWidget::requestValue,
-            parent->controls(), &UVCCaptureControls::getBrightness);
+            capture->controls(), &UVCCaptureControls::getBrightness);
     connect(w, &UVCControlWidget::valueChanged,
-            parent->controls(), &UVCCaptureControls::setBrightness);
-    connect(parent->controls(), &UVCCaptureControls::brightness,
+            capture->controls(), &UVCCaptureControls::setBrightness);
+    connect(capture->controls(), &UVCCaptureControls::brightness,
             w, &UVCControlWidget::setValue);
     w->setRange(-64, 64);
     w->setDefaultValue(0);
@@ -110,16 +110,16 @@ UVCCaptureSettings::UVCCaptureSettings(UVCCapture *parent) :
     modes.append(QPair<int, QString>(0,"Auto"));
     w = new UVCControlWidget("Contrast", modes, "", this);
     connect(w, &UVCControlWidget::requestMode,
-           parent->controls(), &UVCCaptureControls::getContrastMode);
+           capture->controls(), &UVCCaptureControls::getContrastMode);
     connect(w, &UVCControlWidget::modeChanged,
-            parent->controls(), &UVCCaptureControls::setContrastMode);
+            capture->controls(), &UVCCaptureControls::setContrastMode);
     connect(w, &UVCControlWidget::requestValue,
-            parent->controls(), &UVCCaptureControls::getContrast);
+            capture->controls(), &UVCCaptureControls::getContrast);
     connect(w, &UVCControlWidget::valueChanged,
-            parent->controls(), &UVCCaptureControls::setContrast);
-    connect(parent->controls(), &UVCCaptureControls::contrastMode,
+            capture->controls(), &UVCCaptureControls::setContrast);
+    connect(capture->controls(), &UVCCaptureControls::contrastMode,
             w, &UVCControlWidget::setMode);
-    connect(parent->controls(), &UVCCaptureControls::contrast,
+    connect(capture->controls(), &UVCCaptureControls::contrast,
             w, &UVCControlWidget::setValue);
     w->setRange(0, 100);
     w->setDefaultValue(50);
@@ -133,16 +133,16 @@ UVCCaptureSettings::UVCCaptureSettings(UVCCapture *parent) :
     modes.append(QPair<int, QString>(0,"Auto"));
     w = new UVCControlWidget("Hue", modes, "", this);
     connect(w, &UVCControlWidget::requestMode,
-           parent->controls(), &UVCCaptureControls::getHueMode);
+           capture->controls(), &UVCCaptureControls::getHueMode);
     connect(w, &UVCControlWidget::modeChanged,
-            parent->controls(), &UVCCaptureControls::setHueMode);
+            capture->controls(), &UVCCaptureControls::setHueMode);
     connect(w, &UVCControlWidget::requestValue,
-            parent->controls(), &UVCCaptureControls::getHue);
+            capture->controls(), &UVCCaptureControls::getHue);
     connect(w, &UVCControlWidget::valueChanged,
-            parent->controls(), &UVCCaptureControls::setHue);
-    connect(parent->controls(), &UVCCaptureControls::hueMode,
+            capture->controls(), &UVCCaptureControls::setHue);
+    connect(capture->controls(), &UVCCaptureControls::hueMode,
             w, &UVCControlWidget::setMode);
-    connect(parent->controls(), &UVCCaptureControls::hue,
+    connect(capture->controls(), &UVCCaptureControls::hue,
             w, &UVCControlWidget::setValue);
     w->setRange(-180, 180);
     w->setDefaultValue(0);
@@ -152,10 +152,10 @@ UVCCaptureSettings::UVCCaptureSettings(UVCCapture *parent) :
     modes.clear();
     w = new UVCControlWidget("Saturation", modes, "", this);
     connect(w, &UVCControlWidget::requestValue,
-            parent->controls(), &UVCCaptureControls::getSaturation);
+            capture->controls(), &UVCCaptureControls::getSaturation);
     connect(w, &UVCControlWidget::valueChanged,
-            parent->controls(), &UVCCaptureControls::setSaturation);
-    connect(parent->controls(), &UVCCaptureControls::saturation,
+            capture->controls(), &UVCCaptureControls::setSaturation);
+    connect(capture->controls(), &UVCCaptureControls::saturation,
             w, &UVCControlWidget::setValue);
     w->setRange(0, 100);
     w->setDefaultValue(64);
@@ -165,10 +165,10 @@ UVCCaptureSettings::UVCCaptureSettings(UVCCapture *parent) :
     modes.clear();
     w = new UVCControlWidget("Sharpness", modes, "", this);
     connect(w, &UVCControlWidget::requestValue,
-            parent->controls(), &UVCCaptureControls::getSharpness);
+            capture->controls(), &UVCCaptureControls::getSharpness);
     connect(w, &UVCControlWidget::valueChanged,
-            parent->controls(), &UVCCaptureControls::setSharpness);
-    connect(parent->controls(), &UVCCaptureControls::sharpness,
+            capture->controls(), &UVCCaptureControls::setSharpness);
+    connect(capture->controls(), &UVCCaptureControls::sharpness,
             w, &UVCControlWidget::setValue);
     w->setRange(0, 100);
     w->setDefaultValue(50);
@@ -178,10 +178,10 @@ UVCCaptureSettings::UVCCaptureSettings(UVCCapture *parent) :
     modes.clear();
     w = new UVCControlWidget("Gamma", modes, "", this);
     connect(w, &UVCControlWidget::requestValue,
-            parent->controls(), &UVCCaptureControls::getGamma);
+            capture->controls(), &UVCCaptureControls::getGamma);
     connect(w, &UVCControlWidget::valueChanged,
-            parent->controls(), &UVCCaptureControls::setGamma);
-    connect(parent->controls(), &UVCCaptureControls::gamma,
+            capture->controls(), &UVCCaptureControls::setGamma);
+    connect(capture->controls(), &UVCCaptureControls::gamma,
             w, &UVCControlWidget::setValue);
     w->setRange(100, 500);
     w->setDefaultValue(300);
@@ -193,104 +193,21 @@ UVCCaptureSettings::UVCCaptureSettings(UVCCapture *parent) :
     modes.append(QPair<int, QString>(0,"Auto"));
     w = new UVCControlWidget("White Balance", modes, "", this);
     connect(w, &UVCControlWidget::requestMode,
-           parent->controls(), &UVCCaptureControls::getWhiteBalanceMode);
+           capture->controls(), &UVCCaptureControls::getWhiteBalanceMode);
     connect(w, &UVCControlWidget::modeChanged,
-            parent->controls(), &UVCCaptureControls::setWhiteBalanceMode);
+            capture->controls(), &UVCCaptureControls::setWhiteBalanceMode);
     connect(w, &UVCControlWidget::requestValue,
-            parent->controls(), &UVCCaptureControls::getWhiteBalanceTemperature);
+            capture->controls(), &UVCCaptureControls::getWhiteBalanceTemperature);
     connect(w, &UVCControlWidget::valueChanged,
-            parent->controls(), &UVCCaptureControls::setWhiteBalanceTemperature);
-    connect(parent->controls(), &UVCCaptureControls::whiteBalanceMode,
+            capture->controls(), &UVCCaptureControls::setWhiteBalanceTemperature);
+    connect(capture->controls(), &UVCCaptureControls::whiteBalanceMode,
             w, &UVCControlWidget::setMode);
-    connect(parent->controls(), &UVCCaptureControls::whiteBalanceTemperature,
+    connect(capture->controls(), &UVCCaptureControls::whiteBalanceTemperature,
             w, &UVCControlWidget::setValue);
     w->setRange(2800, 6500);
     w->setDefaultValue(4600);
     w->setDefaultMode(1);
     ui->gridLayout_2->addWidget(w,row++,col);
-
-/*
-    int rows = ui->gridLayout->rowCount();
-    func_uvc cb1, cb2;
-
-    // Focus
-    cb1.uvc_cb_u16 = uvc_set_focus_abs;
-    cb2.uvc_cb_u8 = uvc_set_focus_auto;
-    UVCControlWidget* w = new UVCControlWidget(
-                cb1, 'u16', cb2, 'u8', 1, 0, m_parent->handlePtr(),
-                "Focus", " mm", this);
-
-    // TODO: get range from UVC_GET_MIN and UVC_GET_MAX
-    w->setRange(0, 1023);
-    ui->verticalLayout->addWidget(w);
-    //ui->gridLayout->addWidget(w, rows++,0, 1, 2);
-
-    // Exposure
-    cb1.uvc_cb_u32 = uvc_set_exposure_abs;
-    cb2.uvc_cb_u8 = uvc_set_ae_mode;
-    w = new UVCControlWidget(
-                cb1, 'u32',  cb2, 'u8', 8, 1, m_parent->handlePtr(),
-                "Exposure", " us*100", this);
-    w->setRange(50, 10000);
-    ui->verticalLayout->addWidget(w);
-    //ui->gridLayout->addWidget(w, rows++,0, 1, 2);
-
-    // brightness
-    cb1.uvc_cb_16 = uvc_set_brightness;
-    w = new UVCControlWidget(
-                cb1, '16', m_parent->handlePtr(),
-                "Brightness", "", this);
-    w->setRange(0, 100);
-    ui->verticalLayout->addWidget(w);
-    //ui->gridLayout->addWidget(w, rows++,0, 1, 2);
-
-    // contrast
-    cb1.uvc_cb_u16 = uvc_set_contrast;
-    w = new UVCControlWidget(
-                cb1, 'u16', m_parent->handlePtr(),
-                "Contrast", "", this);
-    w->setRange(-64, 64);
-    ui->verticalLayout->addWidget(w);
-    //ui->gridLayout->addWidget(w, rows++,0, 1, 2);
-
-    // hue
-    cb1.uvc_cb_16 = uvc_set_hue;
-    cb2.uvc_cb_u8 = uvc_set_hue_auto;
-    w = new UVCControlWidget(
-                cb1, '16', cb2, 'u8', 1, 0, m_parent->handlePtr(),
-                "Hue", "", this);
-    w->setRange(-180, 180);
-    ui->verticalLayout->addWidget(w);
-    //ui->gridLayout->addWidget(w, rows++,0, 1, 2);
-
-    // saturation
-    cb1.uvc_cb_u16 = uvc_set_saturation;
-    w = new UVCControlWidget(
-                cb1, 'u16', m_parent->handlePtr(),
-                "Saturation", "", this);
-    w->setRange(0, 100);
-    ui->verticalLayout->addWidget(w);
-    //ui->gridLayout->addWidget(w, rows++,0, 1, 2);
-
-    // sharpness
-    cb1.uvc_cb_u16 = uvc_set_contrast;
-    cb2.uvc_cb_u8 = uvc_set_contrast_auto;
-    w = new UVCControlWidget(
-                cb1, 'u16', cb2, 'u8', 1, 0, m_parent->handlePtr(),
-                "Sharpness", "", this);
-    w->setRange(0, 100);
-    ui->verticalLayout->addWidget(w);
-    //ui->gridLayout->addWidget(w, rows++,0, 1, 2);
-
-    // gamma
-    cb1.uvc_cb_u16 = uvc_set_gamma;
-    w = new UVCControlWidget(
-                cb1, 'u16', m_parent->handlePtr(),
-                "Gamma", "", this);
-    w->setRange(100, 500);
-    ui->verticalLayout->addWidget(w);
-    //ui->gridLayout->addWidget(w, rows++,0, 1, 2);
-    */
 }
 
 UVCCaptureSettings::~UVCCaptureSettings()
@@ -298,6 +215,15 @@ UVCCaptureSettings::~UVCCaptureSettings()
     delete ui;
 }
 
+void UVCCaptureSettings::startCapture()
+{
+    emit setCaptureActive(true);
+}
+
+void UVCCaptureSettings::stopCapture()
+{
+    emit setCaptureActive(false);
+}
 /*!
  * \brief UVCCaptureSettings::onDevicesFound populate a combobox
  * with information about the current UVC devices connected

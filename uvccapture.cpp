@@ -1,12 +1,12 @@
 #include "uvccapture.h"
-//#include "utlist.h"
 #include "libuvc/libuvc.h"
+#include "qsemaphore.h"
 #include <QDebug>
 
-UVCCapture::UVCCapture(QObject *parent) : QObject(parent)
+UVCCapture::UVCCapture(int buffer_size, QSemaphore *free_frames, QSemaphore *used_frames, QObject *parent) :
+    QObject(parent), m_cap_buffer_free(free_frames), m_cap_buffer_used(used_frames)
 {
-    m_controls = new UVCCaptureControls(this, &m_devh);
-
+    m_frame_buffer.resize(buffer_size);
     int id = QMetaType::type("cv::Mat");
     if(id == QMetaType::UnknownType) {
         qRegisterMetaType<cv::Mat>("cv::Mat");
@@ -15,11 +15,25 @@ UVCCapture::UVCCapture(QObject *parent) : QObject(parent)
     if(id == QMetaType::UnknownType) {
         qRegisterMetaType<UVCCaptureProperties>("UVCCaptureProperties");
     }
+    id = QMetaType::type("QVector<UVCCaptureProperties>");
+    if(id == QMetaType::UnknownType) {
+        qRegisterMetaType<QVector<UVCCaptureProperties>>("QVector<UVCCaptureProperties>");
+    }
+    id = QMetaType::type("QVector<UVCCaptureDescriptor>");
+    if(id == QMetaType::UnknownType) {
+        qRegisterMetaType<QVector<UVCCaptureDescriptor>>("QVector<UVCCaptureDescriptor>");
+    }
 }
 
 UVCCapture::~UVCCapture()
 {
     closeUVC();
+    emit finished();
+}
+
+void UVCCapture::setup()
+{
+    m_controls = new UVCCaptureControls(this, &m_devh);
 }
 
 /*!
@@ -59,6 +73,7 @@ void UVCCapture::findDevices()
 {
     if(m_context == nullptr) {
         qDebug()<<"Warning: no UVC service context";
+        initUVC();
         return;
     }
     uvc_device_t **list;
@@ -374,6 +389,16 @@ uvc_error UVCCapture::negotiateStream()
     return m_error; // returns 0 on success
 }
 
+void UVCCapture::setCaptureActive(bool active)
+{
+    if(active){
+        startStream();
+    }
+    else {
+        stopStream();
+    }
+}
+
 /*!
  * \brief UVCCapture::startStream
  */
@@ -421,6 +446,30 @@ void UVCCapture::stopStream()
 
 }
 
+
+void UVCCapture::handleFrame(const cv::Mat &frame, int frame_number)
+{
+    int buffer_space = m_cap_buffer_free->available();
+    if(buffer_space == 0) {
+        // there are no slots available. drop the frame
+        ++m_dropped_frames;
+        qDebug()<<"Warning: Capture dropped frame. Total dropped:"
+               <<m_dropped_frames;
+    }
+    else {
+        m_cap_buffer_free->acquire();
+        m_frame_buffer[m_next_index] = frame;
+        // mark that a frame has been emitted
+        m_cap_buffer_used->release();
+        // emit signal with the grame
+        emit frameAvailable(m_frame_buffer[m_next_index], frame_number);
+        qDebug()<<"put in slot"<<m_next_index<<"space free:"<<buffer_space;
+        // advance the next index for the frame buffer
+        m_next_index = (m_next_index + 1) % m_frame_buffer.length();
+    }
+}
+
+
 /* This callback function runs once per frame. Use it to perform any
  * quick processing you need, or have it put the frame into your application's
  * input queue. If this function takes too long, you'll start losing frames. */
@@ -437,6 +486,7 @@ void UVCCapture::callback(uvc_frame_t *frame, void *ptr)
         return;
     }
     cv::Mat cv_frame;
+    //cv::Mat cv_frame;
 
     // if compressed video stream, used mjpeg conversion
     if(frame->frame_format == UVC_FRAME_FORMAT_MJPEG) {
@@ -448,7 +498,7 @@ void UVCCapture::callback(uvc_frame_t *frame, void *ptr)
         }
         else {
             cv_frame = cv::Mat(bgr_frame->height, bgr_frame->width,CV_8UC3, (uchar*)bgr_frame->data, bgr_frame->step);
-            cv::cvtColor(cv_frame,cv_frame,cv::COLOR_BGR2RGB);
+            cv::cvtColor(cv_frame, cv_frame,cv::COLOR_BGR2RGB);
         }
     }
     else {
@@ -469,7 +519,7 @@ void UVCCapture::callback(uvc_frame_t *frame, void *ptr)
     //Get this object object
     UVCCapture *capture = reinterpret_cast<UVCCapture*>(ptr);
 
-    emit capture->frameAvailable(cv_frame, frame->sequence);
+    capture->handleFrame(cv_frame, frame->sequence);
 
     //Free conversion frame memory
     uvc_free_frame(bgr_frame);

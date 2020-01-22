@@ -14,17 +14,20 @@ class UVCCaptureSettings : public QWidget
     Q_OBJECT
 
 public:
-    explicit UVCCaptureSettings(UVCCapture *parent = nullptr);
+    explicit UVCCaptureSettings(UVCCapture *capture, QWidget* parent = nullptr);
     ~UVCCaptureSettings();
 
 signals:
     void openDevice(int, int, QString);
     void capturePropertiesChanged(UVCCapture::UVCCaptureProperties p);
+    void setCaptureActive(bool);
 
 public slots:
     void onSupportedFormatsFound(QVector<UVCCapture::UVCCaptureProperties>);
     void onDevicesFound(QVector<UVCCapture::UVCCaptureDescriptor> devices);
 
+    void startCapture();
+    void stopCapture();
 private slots:
     void on_comboBoxDevices_currentIndexChanged(int index);
 
@@ -33,7 +36,6 @@ private slots:
 
 private:
     Ui::UVCCaptureSettings *ui;
-    UVCCapture* m_parent;
 };
 
 #endif // UVCCAPTURESETTINGS_H

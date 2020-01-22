@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <QSettings>
 #include <QFileDialog>
+#include <QSemaphore>
 #include <QThread>
 
 //#include <QOpenGLWidget>
@@ -23,19 +24,47 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     setWindowTitle("UVC View");
 
+    m_cap_buffer_free = new QSemaphore(m_frame_buffer_size);
+    m_cap_buffer_used = new QSemaphore();
+
+
     // setup capture device
-    m_capture = new UVCCapture(this);
+    m_capture = new UVCCapture(m_frame_buffer_size, m_cap_buffer_free, m_cap_buffer_used, nullptr);
+
+    // make a thread for the capture
+    m_capture_thread = new QThread(this);
+    m_capture->moveToThread(m_capture_thread);
+
+    // connect thread stuff
+    connect(m_capture_thread, &QThread::started,
+            m_capture, &UVCCapture::setup);
+    connect(m_capture_thread, &QThread::finished,
+            m_capture, &UVCCapture::deleteLater);
+    connect(this, &QMainWindow::destroyed,
+            m_capture_thread, &QThread::quit);
+    connect(m_capture, &UVCCapture::finished,
+            m_capture_thread, &QThread::quit);
+    connect(m_capture, &UVCCapture::finished,
+            m_capture, &UVCCapture::deleteLater);
+
     connect(m_capture, &UVCCapture::frameAvailable,
             this, &MainWindow::handleFrame);
     connect(m_capture, &UVCCapture::frameRectChanged,
             ui->cameraView, &CameraView::onFrameRectChanged);
     connect(m_capture, &UVCCapture::statusMessage,
             this, &MainWindow::onCaptureStatusMessage);
+    connect(this, &MainWindow::findDevices,
+            m_capture, &UVCCapture::findDevices);
+    connect(this, &MainWindow::setCaptureActive,
+            m_capture, &UVCCapture::setCaptureActive);
+
+
+     m_capture_thread->start(QThread::NormalPriority);
+
 
     // add FPS counter
     m_fps_label = new QLabel(this);
     m_fps_timer = new FPSTimer(this);
-    m_fps_timer->setRunning(true);
     connect(m_fps_timer, &FPSTimer::fpsUpdated,
             this, &MainWindow::onFPSUpdated);
     ui->statusbar->addPermanentWidget(m_fps_label);
@@ -62,8 +91,11 @@ MainWindow::MainWindow(QWidget *parent)
                 QDockWidget::DockWidgetMovable |
                 QDockWidget::DockWidgetFloatable);
 
-    m_settings_widget->setWidget(new UVCCaptureSettings(m_capture));
+    UVCCaptureSettings* capture_settings = new UVCCaptureSettings(m_capture, this);
+    m_settings_widget->setWidget(capture_settings);
     m_settings_widget->setWindowTitle("Capture Settings");
+    connect(capture_settings, &UVCCaptureSettings::setCaptureActive,
+            this, &MainWindow::onSetCaptureActive);
     addDockWidget(Qt::LeftDockWidgetArea, m_settings_widget);
 
     m_writer_widget = new QDockWidget(this);
@@ -78,22 +110,48 @@ MainWindow::MainWindow(QWidget *parent)
 
      addDockWidget(Qt::LeftDockWidgetArea, m_writer_widget);
 
-    m_capture->initUVC();
-    m_capture->findDevices();
+    emit findDevices();
 }
 
 MainWindow::~MainWindow()
 {
+    emit setCaptureActive(false);
+
+    // drain anything in the capture buffer
+    while(m_cap_buffer_used->available() > 0){
+        m_cap_buffer_used->acquire();
+        m_cap_buffer_free->release();
+        this->thread()->msleep(50);
+        qDebug()<<"capture buffer draining...";
+    }
+    // let the capture thread shutdown
+    if(m_capture_thread != nullptr) {
+        m_capture_thread->quit();
+        m_capture_thread->wait();
+    }
+
     delete ui;
 }
 
+void MainWindow::onSetCaptureActive(bool active)
+{
+    m_fps_timer->setRunning(active);
+    emit setCaptureActive(active);
+}
 
 void MainWindow::handleFrame(const cv::Mat &frame, const int frame_number)
 {
+    // block until the capture has emitted a frame
+    if(!m_cap_buffer_used->tryAcquire()){
+        qDebug()<<"warning: no frame to acquire";
+        return;
+    }
     m_frame = frame;
     m_pix =  cvMatToQPixmap(m_frame);
     ui->cameraView->showFrame(m_pix);
     m_fps_timer->incrementFrame();
+    // tell the capture the buffer has room for another frame
+    m_cap_buffer_free->release();
 }
 
 void MainWindow::onSaveCurrentFrame()
@@ -115,17 +173,17 @@ void MainWindow::onCaptureStatusMessage(const QString &message)
 
 void MainWindow::onFPSUpdated(double fps)
 {
-    m_fps_label->setText(QString::number(fps,'g',2) + " (FPS)");
+    m_fps_label->setText(QString::number(fps,'f',2) + " (FPS)");
 }
 
 void MainWindow::onToolButtonZoomInClicked()
 {
-    ui->cameraView->setScaleFactor(1.0/0.75);
+    ui->cameraView->scaleByFactor(1.0/0.75);
 }
 
 void MainWindow::onToolButtonZoomOutClicked()
 {
-    ui->cameraView->setScaleFactor(0.75);
+    ui->cameraView->scaleByFactor(0.75);
 }
 
 void MainWindow::onToolButtonZoomResetClicked()

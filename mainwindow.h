@@ -43,6 +43,7 @@ class UVCCapture;
 class FPSTimer;
 class QLabel;
 class QToolButton;
+class QSemaphore;
 
 class MainWindow : public QMainWindow
 {
@@ -52,6 +53,10 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+signals:
+    void findDevices();
+    void setCaptureActive(bool);
+
 public slots:
     void handleFrame(const cv::Mat &frame, const int frame_number);
     void onSaveCurrentFrame();
@@ -60,11 +65,25 @@ public slots:
     void onToolButtonZoomInClicked();
     void onToolButtonZoomOutClicked();
     void onToolButtonZoomResetClicked();
+    void onSetCaptureActive(bool active);
+
 private:
     Ui::MainWindow *ui;
+    //< number of frames to buffer from the capture device
+    const int m_frame_buffer_size = 4;
+
+    //< pair of semaphores to synchronize capture and cv worker threads
+    //< track how many frames are allowed
+    QSemaphore* m_cap_buffer_free;
+    //< track how many frames are pending processing
+    QSemaphore* m_cap_buffer_used;
+
     QDockWidget* m_settings_widget = nullptr;
     QDockWidget* m_writer_widget = nullptr;
     UVCCapture* m_capture = nullptr;
+    //< thread for the capture to process the image
+    QThread *m_capture_thread = nullptr;
+
     FPSTimer* m_fps_timer = nullptr;
     QLabel* m_fps_label = nullptr;
     QToolButton* m_button_zoom_in = nullptr;

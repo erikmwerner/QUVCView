@@ -5,6 +5,8 @@
 #include "libuvc/libuvc.h"
 #include "uvccapturecontrols.h"
 #include <opencv2/opencv.hpp>
+#include <QSemaphore>
+#include <QVector>
 #include <QRect>
 
 class UVCCapture : public QObject
@@ -39,7 +41,8 @@ public:
 
 
 public:
-    UVCCapture(QObject *parent = nullptr);
+    UVCCapture(int buffer_size, QSemaphore *free_frames,
+               QSemaphore *used_frames, QObject *parent = nullptr);
     ~UVCCapture();
 
     UVCCaptureControls* controls() { return m_controls; }
@@ -55,8 +58,8 @@ public slots:
     int openDevice(int vid = 0, int pid = 0, QString serial_number = QString());
     void checkDeviceCapabilities(uvc_device_handle_t *devh);
     void setCaptureProperties(UVCCaptureProperties properties);
-    bool startStream();
-    void stopStream();
+    void setCaptureActive(bool);
+    void setup();
 
 signals:
 
@@ -71,12 +74,28 @@ signals:
 
     void statusMessage(QString message);
 
+    //< for cleanup when thread is finished
+    void finished() const;
+
+
 private:
 
     UVCCaptureControls* m_controls = nullptr;
 
+    //< pair of semaphores to synchronize capture and cv worker threads
+    QSemaphore* m_cap_buffer_free;
+    QSemaphore* m_cap_buffer_used;
+
     //< this function is executed whenever the capture grabs a new frame
     static void callback(uvc_frame_t *frame, void *ptr);
+
+    //< matrix to store the current frame
+    QVector<cv::Mat> m_frame_buffer;
+
+    //< the next available index of frame buffer
+    int m_next_index = 0;
+
+    int m_dropped_frames = 0;
 
     //< the libuvc service context
     uvc_context_t *m_context = nullptr;
@@ -102,13 +121,18 @@ private:
     //<
     bool m_uvc_open = false;
 
+    bool startStream();
+    void stopStream();
 
+    void handleFrame(const cv::Mat &frame, int frame_number);
     void getAllCurrentControls();
     void testControlInfo(uint8_t ctrl);
     void test();
+
 };
 
 Q_DECLARE_METATYPE(cv::Mat)
 Q_DECLARE_METATYPE(UVCCapture::UVCCaptureProperties)
+Q_DECLARE_METATYPE(UVCCapture::UVCCaptureDescriptor)
 
 #endif // UVCCAPTURE_H
