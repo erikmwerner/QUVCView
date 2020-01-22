@@ -1,165 +1,309 @@
 #include "uvccapturecontrols.h"
 #include "libuvc/libuvc.h"
 
-UVCCaptureControls::UVCCaptureControls(QObject* parent, uvc_device_handle_t *dev_handle) :
+#include <QDebug>
+
+UVCCaptureControls::UVCCaptureControls(QObject* parent, uvc_device_handle_t **dev_handle) :
     QObject(parent), m_devh(dev_handle)
 {}
 
 void UVCCaptureControls::getExposureMode()
 {
     uint8_t mode;
-    uvc_get_ae_mode(m_devh, &mode, UVC_GET_CUR);
-    emit exposureMode(mode);
+    uvc_error_t res = uvc_get_ae_mode(*m_devh, &mode, UVC_GET_CUR);
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error gettings exposure mode"<<mode<<"Error:"<<res;
+    }
+    else {
+        emit exposureMode(mode);
+    }
 }
 
-void UVCCaptureControls::setExposureMode(uint8_t mode)
+void UVCCaptureControls::setExposureMode(int mode)
 {
-    uvc_set_ae_mode(m_devh, mode);
+    uvc_error_t res = uvc_set_ae_mode(*m_devh, static_cast<uint8_t>(mode));
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error settings exposure mode"<<mode<<"Error:"<<res;
+    }
 }
 
 void UVCCaptureControls::getAbsExposure()
 {
 
-    uint32_t exposure_time;
-    uvc_get_exposure_abs(m_devh, &exposure_time, UVC_GET_CUR);
-    emit exposure(exposure_time);
+    uint32_t value;
+    uvc_error_t res = uvc_get_exposure_abs(*m_devh, &value, UVC_GET_CUR);
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error getting abs exppsure"<<value<<"Error:"<<res;
+    }
+    else {
+        emit exposure(value);
+    }
 }
 
-void UVCCaptureControls::setAbsExposure(uint32_t exposure)
+void UVCCaptureControls::setAbsExposure(int exposure)
 {
-    uvc_set_exposure_abs(m_devh, exposure);
+    uvc_error_t res = uvc_set_exposure_abs(*m_devh, static_cast<uint32_t>(exposure));
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error setting abs exppsure"<<exposure<<"Error:"<<res;
+    }
 }
 
 void UVCCaptureControls::getFocusMode()
 {
-    uint8_t state;
-    uvc_get_focus_auto(m_devh, &state, UVC_GET_CUR);
-    emit focusMode(state);
+    uint8_t mode;
+    uvc_error_t res = uvc_get_focus_auto(*m_devh, &mode, UVC_GET_CUR);
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error getting focus mode"<<mode<<"Error:"<<res;
+    }
+    else {
+        emit focusMode(mode);
+    }
 }
 
-void UVCCaptureControls::setFocusMode(uint8_t mode)
+void UVCCaptureControls::setFocusMode(int mode)
 {
-    uvc_set_focus_auto(m_devh, mode);
+    uvc_error_t res = uvc_set_focus_auto(*m_devh, static_cast<uint8_t>(mode));
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error setting focus mode"<<mode<<"Error:"<<res;
+    }
 }
 
 void UVCCaptureControls::getAbsoluteFocus()
 {
-    uint16_t focus;
-    uvc_get_focus_abs(m_devh, &focus, UVC_GET_CUR);
-    emit absoluteFocus(focus);
+    uint16_t value;
+    uvc_error_t res = uvc_get_focus_abs(*m_devh, &value, UVC_GET_CUR);
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error getting absolute focus"<<value<<"Error:"<<res;
+    }
+    else {
+        emit absoluteFocus(value);
+    }
 }
 
-void UVCCaptureControls::setAbsoluteFocus(uint16_t focus)
+void UVCCaptureControls::setAbsoluteFocus(int focus)
 {
-    uvc_set_focus_abs(m_devh, focus);
+    uvc_error_t res = uvc_set_focus_abs(*m_devh, static_cast<uint16_t>(focus));
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error setting absolute focus"<<focus<<"Error:"<<res;
+    }
 }
 
 void UVCCaptureControls::getBackLightCompensation()
 {
-
+    uint16_t value;
+    uvc_error_t res = uvc_get_backlight_compensation(*m_devh, &value, UVC_GET_CUR);
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error getting backlight compensation"<<value<<"Error:"<<res;
+    }
+    else {
+        emit backlightCompensation(value);
+    }
 }
 
-void UVCCaptureControls::setBackLightCompensation(uint16_t compensation)
+void UVCCaptureControls::setBackLightCompensation(int compensation)
 {
-
+    uvc_error_t res = uvc_set_backlight_compensation(*m_devh, static_cast<uint16_t>(compensation));
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error setting backlight compensation"<<compensation<<"Error:"<<res;
+    }
 }
 
 void UVCCaptureControls::getBrightness()
 {
-
+    int16_t value;
+    uvc_error_t res = uvc_get_brightness(*m_devh, &value, UVC_GET_CUR);
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error getting brightness"<<value<<"Error:"<<res;
+    }
+    else {
+        emit brightness(value);
+    }
 }
 
-void UVCCaptureControls::setBrightness(int16_t brightness)
+void UVCCaptureControls::setBrightness(int brightness)
 {
-
+    uvc_error_t res = uvc_set_brightness(*m_devh, static_cast<int16_t>(brightness));
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error setting brightness"<<brightness<<"Error:"<<res;
+    }
 }
 
 void UVCCaptureControls::getContrastMode()
 {
-
+    uint8_t mode;
+    uvc_error_t res = uvc_get_contrast_auto(*m_devh, &mode, UVC_GET_CUR);
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error getting contrast mode"<<mode<<"Error:"<<res;
+    }
+    else {
+        emit contrastMode(mode);
+    }
 }
 
-void UVCCaptureControls::setContrastMode(uint8_t mode)
+void UVCCaptureControls::setContrastMode(int mode)
 {
-
+    uvc_error_t res = uvc_set_contrast_auto(*m_devh, static_cast<uint8_t>(mode));
+    if(res < UVC_SUCCESS) {
+         qDebug()<<"Error setting contrast mode"<<mode<<"Error:"<<res;
+    }
 }
 
 void UVCCaptureControls::getContrast()
 {
-
+    uint16_t value;
+    uvc_error_t res = uvc_get_contrast(*m_devh, &value, UVC_GET_CUR);
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error getting contrast"<<value<<"Error:"<<res;
+    }
+    else {
+        emit contrast(value);
+    }
 }
 
-void UVCCaptureControls::setContrast(uint16_t contrast)
+void UVCCaptureControls::setContrast(int contrast)
 {
-
+    uvc_error_t res = uvc_set_contrast(*m_devh, static_cast<uint16_t>(contrast));
+    if(res < UVC_SUCCESS) {
+         qDebug()<<"Error setting contrast mode"<<contrast<<"Error:"<<res;
+    }
 }
 
 void UVCCaptureControls::getHueMode()
 {
-
+    uint8_t mode;
+    uvc_error_t res = uvc_get_hue_auto(*m_devh, &mode, UVC_GET_CUR);
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error getting hue mode"<<mode<<"Error:"<<res;
+    }
+    else {
+        emit hueMode(mode);
+    }
 }
 
-void UVCCaptureControls::setHueMode(uint8_t mode)
+void UVCCaptureControls::setHueMode(int mode)
 {
-
+    uvc_error_t res = uvc_set_hue_auto(*m_devh, static_cast<uint8_t>(mode));
+    if(res < UVC_SUCCESS) {
+         qDebug()<<"Error setting hue mode"<<mode<<"Error:"<<res;
+    }
 }
 
 void UVCCaptureControls::getHue()
 {
-
+    int16_t value;
+    uvc_error_t res = uvc_get_hue(*m_devh, &value, UVC_GET_CUR);
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error getting contrast"<<value<<"Error:"<<res;
+    }
+    else {
+        emit hue(value);
+    }
 }
 
-void UVCCaptureControls::setHue(int16_t hue)
+void UVCCaptureControls::setHue(int hue)
 {
-
+    uvc_error_t res = uvc_set_hue(*m_devh, static_cast<int16_t>(hue));
+    if(res < UVC_SUCCESS) {
+         qDebug()<<"Error setting hue mode"<<hue<<"Error:"<<res;
+    }
 }
 
 void UVCCaptureControls::getSaturation()
 {
-
+    uint16_t value;
+    uvc_error_t res = uvc_get_saturation(*m_devh, &value, UVC_GET_CUR);
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error getting saturation"<<value<<"Error:"<<res;
+    }
+    else {
+        emit saturation(value);
+    }
 }
 
-void UVCCaptureControls::setSaturation(uint16_t saturation)
+void UVCCaptureControls::setSaturation(int saturation)
 {
-
+    uvc_error_t res = uvc_set_saturation(*m_devh, static_cast<uint16_t>(saturation));
+    if(res < UVC_SUCCESS) {
+         qDebug()<<"Error setting saturation mode"<<saturation<<"Error:"<<res;
+    }
 }
 
 void UVCCaptureControls::getSharpness()
 {
-
+    uint16_t value;
+    uvc_error_t res = uvc_get_sharpness(*m_devh, &value, UVC_GET_CUR);
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error getting sharpness"<<value<<"Error:"<<res;
+    }
+    else {
+        emit sharpness(value);
+    }
 }
 
-void UVCCaptureControls::setSharpness(uint16_t sharpness)
+void UVCCaptureControls::setSharpness(int sharpness)
 {
-
+    uvc_error_t res = uvc_set_sharpness(*m_devh, static_cast<uint16_t>(sharpness));
+    if(res < UVC_SUCCESS) {
+         qDebug()<<"Error setting sharpness"<<sharpness<<"Error:"<<res;
+    }
 }
 
 void UVCCaptureControls::getGamma()
 {
-
+    uint16_t value;
+    uvc_error_t res = uvc_get_gamma(*m_devh, &value, UVC_GET_CUR);
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error getting gamma"<<value<<"Error:"<<res;
+    }
+    else {
+        emit gamma(value);
+    }
 }
 
-void UVCCaptureControls::setGamma(uint16_t gamma)
+void UVCCaptureControls::setGamma(int gamma)
 {
-
+    uvc_error_t res = uvc_set_gamma(*m_devh, static_cast<uint16_t>(gamma));
+    if(res < UVC_SUCCESS) {
+         qDebug()<<"Error setting gama"<<gamma<<"Error:"<<res;
+    }
 }
 
 void UVCCaptureControls::getWhiteBalanceMode()
 {
-
+    uint8_t mode;
+    uvc_error_t res = uvc_get_white_balance_temperature_auto(*m_devh, &mode, UVC_GET_CUR);
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error getting white balance mode"<<mode<<"Error:"<<res;
+    }
+    else {
+        emit whiteBalanceMode(mode);
+    }
 }
 
-void UVCCaptureControls::setWhiteBalanceMode(uint8_t mode)
+void UVCCaptureControls::setWhiteBalanceMode(int mode)
 {
-
+    uvc_error_t res = uvc_set_white_balance_temperature(*m_devh, static_cast<uint8_t>(mode));
+    if(res < UVC_SUCCESS) {
+         qDebug()<<"Error setting white balance mode"<<mode<<"Error:"<<res;
+    }
 }
 
 void UVCCaptureControls::getWhiteBalanceTemperature()
 {
-
+    uint16_t value;
+    uvc_error_t res = uvc_get_white_balance_temperature(*m_devh, &value, UVC_GET_CUR);
+    if(res < UVC_SUCCESS) {
+        qDebug()<<"Error getting white balance temperature"<<value<<"Error:"<<res;
+    }
+    else {
+        emit whiteBalanceTemperature(value);
+    }
 }
 
-void UVCCaptureControls::setWhiteBalanceTemperature(int16_t temperature)
+void UVCCaptureControls::setWhiteBalanceTemperature(int temperature)
 {
-
+    uvc_error_t res = uvc_set_white_balance_temperature(*m_devh, static_cast<uint16_t>(temperature));
+    if(res < UVC_SUCCESS) {
+         qDebug()<<"Error setting white balance temperature"<<temperature<<"Error:"<<res;
+    }
 }

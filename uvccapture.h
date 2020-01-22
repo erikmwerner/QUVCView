@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include "libuvc/libuvc.h"
+#include "uvccapturecontrols.h"
 #include <opencv2/opencv.hpp>
 #include <QRect>
 
@@ -40,6 +41,8 @@ public:
 public:
     UVCCapture(QObject *parent = nullptr);
     ~UVCCapture();
+
+    UVCCaptureControls* controls() { return m_controls; }
     int initUVC();
     void closeUVC();
 
@@ -66,7 +69,12 @@ signals:
 
     void foundCaptureProperties(QVector<UVCCaptureProperties>);
 
+    void statusMessage(QString message);
+
 private:
+
+    UVCCaptureControls* m_controls = nullptr;
+
     //< this function is executed whenever the capture grabs a new frame
     static void callback(uvc_frame_t *frame, void *ptr);
 
@@ -83,7 +91,7 @@ private:
     uvc_stream_ctrl_t m_stream_ctrl;
 
     //<
-    uvc_error_t m_error = UVC_SUCCESS; // 0
+    uvc_error_t m_error = UVC_SUCCESS; // UVC_SUCCESS = 0
 
     //<
     UVCCaptureProperties m_properties;
@@ -95,7 +103,8 @@ private:
     bool m_uvc_open = false;
 
 
-    void getControlInfo(uint8_t ctrl);
+    void getAllCurrentControls();
+    void testControlInfo(uint8_t ctrl);
     void test();
 };
 

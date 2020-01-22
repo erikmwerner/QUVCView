@@ -22,7 +22,8 @@ SOURCES += \
     uvccapture.cpp \
     uvccapturecontrols.cpp \
     uvccapturesettings.cpp \
-    uvccontrolwidget.cpp
+    uvccontrolwidget.cpp \
+    videowriterwidget.cpp
 
 HEADERS += \
     cameraview.h \
@@ -31,7 +32,8 @@ HEADERS += \
     uvccapture.h \
     uvccapturecontrols.h \
     uvccapturesettings.h \
-    uvccontrolwidget.h
+    uvccontrolwidget.h \
+    videowriterwidget.h
 
 OPENCV_PATH = /usr/local/Cellar/opencv/4.2.0_1
 LIBS += -L/$$OPENCV_PATH/lib/ \
@@ -62,7 +64,8 @@ DEPENDPATH += $$LIBUVC_PATH/include
 FORMS += \
     mainwindow.ui \
     uvccapturesettings.ui \
-    uvccontrolwidget.ui
+    uvccontrolwidget.ui \
+    videowriterwidget.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

@@ -16,92 +16,92 @@ class UVCCaptureControls : public QObject
     Q_OBJECT
 
 public:
-    UVCCaptureControls(QObject* parent, uvc_device_handle_t *dev_handle);
+    UVCCaptureControls(QObject* parent, uvc_device_handle_t **dev_handle);
 
 signals:
-    void exposureMode(uint8_t mode);
-    void exposure(uint32_t exposure);
+    void exposureMode(int mode);
+    void exposure(int exposure);
 
-    void focusMode(uint8_t mode);
-    void absoluteFocus(uint16_t focus);
+    void focusMode(int mode);
+    void absoluteFocus(int focus);
 
-    void backlightCompensation(uint16_t compensation);
+    void backlightCompensation(int compensation);
 
-    void brightness(int16_t);
+    void brightness(int);
 
-    void contrastMode(uint8_t mode);
-    void contrast(uint16_t contrast);
+    void contrastMode(int mode);
+    void contrast(int contrast);
 
-    void hueMode(uint8_t mode);
-    void hue(int16_t hue);
+    void hueMode(int mode);
+    void hue(int hue);
 
-    void saturation(uint16_t saturation);
+    void saturation(int saturation);
 
-    void sharpness(uint16_t sharpness);
+    void sharpness(int sharpness);
 
-    void gamma(uint16_t gamma);
+    void gamma(int gamma);
 
-    void whiteBalanceMode(uint8_t mode);
-    void whiteBalanceTemperature(int16_t temperature);
+    void whiteBalanceMode(int mode);
+    void whiteBalanceTemperature(int temperature);
 
 public slots:
     //< exposure mode 8 = auto-exposure, 1 = manual exposure
     void getExposureMode();
-    void setExposureMode(uint8_t mode);
+    void setExposureMode(int mode);
     //< exposure time in 100us units (for 10ms, set to 100) range: 50 - 10000
     void getAbsExposure();
-    void setAbsExposure(uint32_t exposure);
+    void setAbsExposure(int exposure);
 
     //< focus mode 1 = auto-focus, 0 = manual focus
     void getFocusMode();
-    void setFocusMode(uint8_t mode);
+    void setFocusMode(int mode);
     //< focus distance in [mm] range: 0 - 1023
     void getAbsoluteFocus();
-    void setAbsoluteFocus(uint16_t focus);
+    void setAbsoluteFocus(int focus);
 
     //< 0 means backlight compensation is disabled. range: 0 - 1
     void getBackLightCompensation();
-    void setBackLightCompensation(uint16_t compensation);
+    void setBackLightCompensation(int compensation);
 
     //< range: 0 - 100
     void getBrightness();
-    void setBrightness(int16_t brightness);
+    void setBrightness(int brightness);
 
     //< unknown parameter range (guess 0 and 1?)
     void getContrastMode();
-    void setContrastMode(uint8_t mode);
+    void setContrastMode(int mode);
     //< range: -64 - 64
     void getContrast();
-    void setContrast(uint16_t contrast);
+    void setContrast(int contrast);
 
     //< unknown parameter range (guess 0 and 1?)
     void getHueMode();
-    void setHueMode(uint8_t mode);
+    void setHueMode(int mode);
     //< range: -180 - 180
     void getHue();
-    void setHue(int16_t hue);
+    void setHue(int hue);
 
     //< range: 0 - 100
     void getSaturation();
-    void setSaturation(uint16_t saturation);
+    void setSaturation(int saturation);
 
     //< range: 0 - 100
     void getSharpness();
-    void setSharpness(uint16_t sharpness);
+    void setSharpness(int sharpness);
 
     //< range: 100 - 500
     void getGamma();
-    void setGamma(uint16_t gamma);
+    void setGamma(int gamma);
 
     //< unknown parameter range (guess 0 and 1?)
     void getWhiteBalanceMode();
-    void setWhiteBalanceMode(uint8_t mode);
+    void setWhiteBalanceMode(int mode);
     //< range: 2800 - 6500
     void getWhiteBalanceTemperature();
-    void setWhiteBalanceTemperature(int16_t temperature);
+    void setWhiteBalanceTemperature(int temperature);
 private:
-    //< pointer to an open device. valid only when device is open
-    uvc_device_handle_t *m_devh = nullptr;
+    //< pointer to an open device handle. valid only when device is open
+    uvc_device_handle_t **m_devh = nullptr;
 };
 
 #endif // UVCCAPTURECONTROLS_H

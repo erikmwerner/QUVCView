@@ -5,6 +5,8 @@
 
 UVCCapture::UVCCapture(QObject *parent) : QObject(parent)
 {
+    m_controls = new UVCCaptureControls(this, &m_devh);
+
     int id = QMetaType::type("cv::Mat");
     if(id == QMetaType::UnknownType) {
         qRegisterMetaType<cv::Mat>("cv::Mat");
@@ -168,7 +170,7 @@ void UVCCapture::checkDeviceCapabilities(uvc_device_handle_t *devh)
      }*/
 }
 
-void UVCCapture::getControlInfo(uint8_t ctrl)
+void UVCCapture::testControlInfo(uint8_t ctrl)
 {
     int unitID = uvc_get_processing_units(m_devh)->bUnitID << 8 | m_stream_ctrl.bInterfaceNumber;
     int length = uvc_get_ctrl_len(m_devh, unitID, ctrl);
@@ -205,6 +207,25 @@ void UVCCapture::getControlInfo(uint8_t ctrl)
         qDebug()<<"buf["<<i<<"]"<<cmdbuf[i];
     }
     qDebug()<<"--------";
+}
+
+void UVCCapture::getAllCurrentControls()
+{
+    m_controls->getExposureMode();
+    m_controls->getAbsExposure();
+    m_controls->getFocusMode();
+    m_controls->getAbsoluteFocus();
+    m_controls->getBackLightCompensation();
+    m_controls->getBrightness();
+    m_controls->getContrastMode();
+    m_controls->getContrast();
+    m_controls->getHueMode();
+    m_controls->getHue();
+    m_controls->getSaturation();
+    m_controls->getSharpness();
+    m_controls->getGamma();
+    m_controls->getWhiteBalanceMode();
+    m_controls->getWhiteBalanceTemperature();
 }
 
 void UVCCapture::test()
@@ -304,6 +325,7 @@ int UVCCapture::openDevice(int vid, int pid, QString serial_number)
         // Try to open the device (requires exclusive access)
         // (Device to open, handle to opened device)
         m_error = uvc_open(m_dev, &m_devh);
+        //m_controls->setHandle(m_devh);
         if (m_error < 0) {
             // unable to open device
             uvc_perror(m_error, "uvc_open");
@@ -367,6 +389,12 @@ bool UVCCapture::startStream()
         if(m_error == UVC_SUCCESS) {
             emit frameRectChanged(m_properties.frameRect);
             m_streaming_active = true;
+            emit statusMessage("Getting device controls...");
+            getAllCurrentControls();
+            QString status_message("Streaming from device (");
+            status_message += QString::number(m_properties.frameRect.width()) + "x";
+            status_message += QString::number(m_properties.frameRect.height()) + ")";
+            emit statusMessage(status_message);
             qDebug()<<"UVC streaming started";
             return true;
         }
@@ -382,6 +410,7 @@ void UVCCapture::stopStream()
         uvc_stop_streaming(m_devh);
         // set a flag to remember streaming has been stopped
         m_streaming_active = false;
+        emit statusMessage("Streaming stopped");
         qDebug()<<"UVC streaming stopped";
     }
     else {

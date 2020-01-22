@@ -17,20 +17,21 @@ public:
     explicit UVCCaptureSettings(UVCCapture *parent = nullptr);
     ~UVCCaptureSettings();
 
-public slots:
-    void onSupportedFormatsFound(QVector<UVCCapture::UVCCaptureProperties>);
-
 signals:
     void openDevice(int, int, QString);
     void capturePropertiesChanged(UVCCapture::UVCCaptureProperties p);
 
-protected slots:
+public slots:
+    void onSupportedFormatsFound(QVector<UVCCapture::UVCCaptureProperties>);
+    void displayStatusMessage(QString message);
     void onDevicesFound(QVector<UVCCapture::UVCCaptureDescriptor> devices);
 
 private slots:
     void on_comboBoxDevices_currentIndexChanged(int index);
 
     void on_comboBoxFormat_currentIndexChanged(int index);
+    void on_pushButtonDefaults_clicked();
+
 private:
     Ui::UVCCaptureSettings *ui;
     UVCCapture* m_parent;

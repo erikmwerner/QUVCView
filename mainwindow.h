@@ -52,23 +52,12 @@ public:
 
 public slots:
     void handleFrame(const cv::Mat &frame, const int frame_number);
-
-    uvc_device_handle_t* handle() {return devh;}
-
+    void onSaveCurrentFrame();
 private:
     Ui::MainWindow *ui;
-    QDockWidget* _settings_widget = nullptr;
+    QDockWidget* m_settings_widget = nullptr;
+    QDockWidget* m_writer_widget = nullptr;
     UVCCapture* m_capture = nullptr;
-
-
-
-    uvc_context_t *ctx;
-    uvc_device_t *dev;
-    uvc_device_handle_t *devh;
-    uvc_stream_ctrl_t ctrl;
-    uvc_error_t res;
-
-    uvc_stream_handle_t *strmhp;
     QPixmap m_pix;
     cv::Mat m_frame;
 };

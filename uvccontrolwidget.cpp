@@ -1,57 +1,73 @@
 #include "uvccontrolwidget.h"
 #include "ui_uvccontrolwidget.h"
 #include <QCheckBox>
+#include <QComboBox>
 #include <QLabel>
 #include <QDebug>
 
-UVCControlWidget::UVCControlWidget(func_uvc callback1, int cb_1_type,
-                                   func_uvc callback2, int cb_2_type,
-                                   int value_checked, int value_unchecked,
-                                   uvc_device_handle_t **handle,
-                                   QString name, QString suffix, QWidget *parent) :
-    QWidget(parent), ui(new Ui::UVCControlWidget), m_callback1(callback1), m_cb1_type(cb_1_type),
-    m_callback2(callback2), m_cb2_type(cb_2_type), m_value_checked(value_checked),
-    m_value_unchecked(value_unchecked), m_handle(handle)
-
+UVCControlWidget::UVCControlWidget(QString name, QVector<QPair<int, QString> >modes,
+                                   QString units, QWidget* parent) :
+    QWidget(parent), ui(new Ui::UVCControlWidget), m_mode_data(modes)
 {
     ui->setupUi(this);
     setObjectName(name);
-
-    // put a label on the ui
     ui->label->setText(name);
-    ui->checkBox->setText("Auto");
-
-    connect(ui->checkBox, &QCheckBox::toggled,
-            this,&UVCControlWidget::onCheckBoxToggled);
-
-    if(!suffix.isEmpty()) {
-        ui->spinBox->setSuffix(suffix);
+    if(!units.isEmpty()) {
+        ui->spinBox->setSuffix(units);
     }
-}
-
-UVCControlWidget::UVCControlWidget(func_uvc callback1, int cb_1_type,
-                                   uvc_device_handle_t **handle,
-                                   QString name, QString suffix, QWidget *parent) :
-    QWidget(parent), ui(new Ui::UVCControlWidget), m_callback1(callback1), m_cb1_type(cb_1_type),
-    m_handle(handle)
-
-{
-    ui->setupUi(this);
-    setObjectName(name);
-
-    // put a label on the ui
-    ui->label->setText(name);
-
-    if(!suffix.isEmpty()) {
-        ui->spinBox->setSuffix(suffix);
+    if(modes.length() == 2) {
+        // two possible modes, use a checkbox
+        m_check = new QCheckBox(this);
+        // use the first mode name as the checkbox name
+        m_check->setText(modes.first().second);
+        connect(m_check, &QCheckBox::toggled,
+                this,&UVCControlWidget::onCheckBoxToggled);
+        ui->gridLayout->addWidget(m_check,0,1);
     }
-
-    ui->checkBox->setVisible(false);
+    else if(modes.length() > 2) {
+        // for 3+ modes, use a combo box
+        m_combo = new QComboBox(this);
+        for(int i = 0; i <modes.length(); ++i){
+            QPair<int, QString> mode = modes.at(i);
+            m_combo->addItem(mode.second, mode.first);
+        }
+        ui->gridLayout->addWidget(m_combo,0,1);
+    }
+    else {
+        // mode list is empty
+    }
+    QFont font;
+    font.setPointSize(10);
+    setFont(font);
 }
 
 UVCControlWidget::~UVCControlWidget()
 {
     delete ui;
+}
+
+void UVCControlWidget::setMode(int mode)
+{
+    if(m_check != nullptr) {
+        m_check->setChecked(mode == m_mode_data.first().first ? true : false);
+    }
+    else if(m_combo != nullptr)
+    {
+        for(int i = 0; i <m_mode_data.length(); ++i){
+            QPair<int, QString> m = m_mode_data.at(i);
+            if(m.first == mode) {
+                m_combo->setCurrentIndex(i);
+            }
+        }
+    }
+}
+
+void UVCControlWidget::setValue(int value)
+{
+    const QSignalBlocker blocker1(ui->spinBox);
+    const QSignalBlocker blocker2(ui->horizontalSlider);
+    ui->spinBox->setValue(value);
+    ui->horizontalSlider->setValue(value);
 }
 
 void UVCControlWidget::setRange(int min, int max, int step)
@@ -65,59 +81,55 @@ void UVCControlWidget::setRange(int min, int max, int step)
     ui->horizontalSlider->setSingleStep(step);
 }
 
+void UVCControlWidget::resetToDefaultValues()
+{
+    if(m_mode_data.length() == 2) {
+        QPair<int, QString> m = m_mode_data.at(0);
+        m_check->setChecked(m.first == m_default_mode);
+    }
+    else if(m_mode_data.length() > 2) {
+        for(int i = 0; i <m_mode_data.length(); ++i){
+            QPair<int, QString> m = m_mode_data.at(i);
+            if(m.first == m_default_mode) {
+                m_combo->setCurrentIndex(i);
+            }
+        }
+    }
+    ui->horizontalSlider->setValue(m_default_value);
+}
+
+
 void UVCControlWidget::onCheckBoxToggled(bool checked)
 {
     if(checked) {
+        // disable slider and spinbox
         ui->horizontalSlider->setEnabled(false);
         ui->spinBox->setEnabled(false);
-        sendToCallback(m_callback2, m_cb2_type, m_value_checked);
+        emit modeChanged(m_mode_data.at(0).first);
     }
     else {
+        // enable slider and spinbox
         ui->horizontalSlider->setEnabled(true);
         ui->spinBox->setEnabled(true);
-        sendToCallback(m_callback2, m_cb2_type, m_value_unchecked);
+        emit modeChanged(m_mode_data.at(1).first);
     }
+}
+
+void UVCControlWidget::onComboBoxIndexChanged(bool index)
+{
+    emit modeChanged(m_mode_data.at(index).first);
 }
 
 void UVCControlWidget::on_horizontalSlider_valueChanged(int value)
 {
     const QSignalBlocker blocker(ui->spinBox);
     ui->spinBox->setValue(value);
-    sendToCallback(m_callback1, m_cb1_type, value);
+    emit valueChanged(value);
 }
 
 void UVCControlWidget::on_spinBox_valueChanged(int arg1)
 {
     const QSignalBlocker bloccker(ui->horizontalSlider);
     ui->horizontalSlider->setValue(arg1);
-    sendToCallback(m_callback1, m_cb1_type, arg1);
-}
-
-void UVCControlWidget::sendToCallback(func_uvc callback, int cb_typ, int value)
-{
-    if(*m_handle == nullptr) {
-        qDebug()<<"Warning: handle is a null pointer"<<objectName();
-        return;
-    }
-    switch(m_cb1_type) {
-    case 'u8':
-        callback.uvc_cb_u8(*m_handle, value);
-        break;
-    case 'u16':
-        callback.uvc_cb_u16(*m_handle, value);
-        break;
-    case 'u32':
-        callback.uvc_cb_u32(*m_handle, value);
-        break;
-    case '8':
-        callback.uvc_cb_8(*m_handle, value);
-        break;
-    case '16':
-        callback.uvc_cb_16(*m_handle, value);
-        break;
-    case '32':
-        callback.uvc_cb_32(*m_handle, value);
-        break;
-    }
-    qDebug()<<"UVC control widget"<<objectName()<<"sent value"<<value;
+    emit valueChanged(arg1);
 }
