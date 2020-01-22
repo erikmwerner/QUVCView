@@ -72,14 +72,14 @@ signals:
 
     void foundCaptureProperties(QVector<UVCCaptureProperties>);
 
+    void capturePropertiesChanged(UVCCaptureProperties properties);
+
     void statusMessage(QString message);
 
     //< for cleanup when thread is finished
     void finished() const;
 
-
 private:
-
     UVCCaptureControls* m_controls = nullptr;
 
     //< pair of semaphores to synchronize capture and cv worker threads

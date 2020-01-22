@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include "libuvc/libuvc.h"
 #include <opencv2/opencv.hpp>
+#include "uvccapture.h"
 
 #include <QDebug>
 
@@ -59,13 +60,18 @@ signals:
 
 public slots:
     void handleFrame(const cv::Mat &frame, const int frame_number);
-    void onSaveCurrentFrame();
+    void onSaveCurrentFrame(const QString &file_name);
     void onCaptureStatusMessage(const QString &message);
     void onFPSUpdated(double fps);
     void onToolButtonZoomInClicked();
     void onToolButtonZoomOutClicked();
     void onToolButtonZoomResetClicked();
     void onSetCaptureActive(bool active);
+
+    void onStartVideoRecording(const QString &file_name);
+    void onStopVideoRecording();
+    void onCapturePropertiesChanged(UVCCapture::UVCCaptureProperties properties);
+    void showAbout();
 
 private:
     Ui::MainWindow *ui;
@@ -91,6 +97,10 @@ private:
     QToolButton* m_button_zoom_reset = nullptr;
     QPixmap m_pix;
     cv::Mat m_frame;
+
+    bool m_recording = false;
+    cv::VideoWriter m_writer;
+    UVCCapture::UVCCaptureProperties m_properties_copy;
 };
 
 static inline QImage  cvMatToQImage( const cv::Mat &inMat )

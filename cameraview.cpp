@@ -2,6 +2,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
 #include <QGestureEvent>
+//#include <QOpenGLWidget>
 #include <QDebug>
 
 CameraView::CameraView(QWidget *parent) : QGraphicsView(parent)
@@ -15,6 +16,11 @@ CameraView::CameraView(QWidget *parent) : QGraphicsView(parent)
     m_scene->addItem(m_pixmap_frame);
 
     viewport()->grabGesture(Qt::PinchGesture);// for pinch-to-zoom
+
+    // TK OpenGL causes a kernel panic when docking a dockwidget on
+    // using: Intel Iris 5100 graphics
+    // setViewport(new QOpenGLWidget());
+    //setViewport(new QOpenGLWidget(this)); // QGraphicsView::QAbstractScrollArea takes ownership
 }
 
 void CameraView::scaleByFactor(qreal factor)

@@ -36,6 +36,7 @@ void UVCCapture::setup()
     m_controls = new UVCCaptureControls(this, &m_devh);
 }
 
+
 /*!
  * \brief UVCCapture::initUVC start a new UVC service context
  * and sets the m_uvc_open flag to true on success
@@ -74,7 +75,6 @@ void UVCCapture::findDevices()
     if(m_context == nullptr) {
         qDebug()<<"Warning: no UVC service context";
         initUVC();
-        return;
     }
     uvc_device_t **list;
     m_error = uvc_get_device_list(m_context, &list);
@@ -304,6 +304,7 @@ void UVCCapture::closeUVC()
 void UVCCapture::setCaptureProperties(UVCCapture::UVCCaptureProperties properties)
 {
     m_properties = properties;
+    emit capturePropertiesChanged(m_properties);
 }
 
 /*!
@@ -446,7 +447,12 @@ void UVCCapture::stopStream()
 
 }
 
-
+/*!
+ * \brief UVCCapture::handleFrame manages frame traffic from
+ * this thread to the GUI
+ * \param frame
+ * \param frame_number
+ */
 void UVCCapture::handleFrame(const cv::Mat &frame, int frame_number)
 {
     int buffer_space = m_cap_buffer_free->available();
@@ -463,18 +469,21 @@ void UVCCapture::handleFrame(const cv::Mat &frame, int frame_number)
         m_cap_buffer_used->release();
         // emit signal with the grame
         emit frameAvailable(m_frame_buffer[m_next_index], frame_number);
-        qDebug()<<"put in slot"<<m_next_index<<"space free:"<<buffer_space;
         // advance the next index for the frame buffer
         m_next_index = (m_next_index + 1) % m_frame_buffer.length();
     }
 }
 
 
-/* This callback function runs once per frame. Use it to perform any
- * quick processing you need, or have it put the frame into your application's
- * input queue. If this function takes too long, you'll start losing frames. */
+/*!
+ * \brief UVCCapture::callback function runs once per frame amd is called
+ * by the lib_uvc library
+ * \param frame
+ * \param ptr
+ */
 void UVCCapture::callback(uvc_frame_t *frame, void *ptr)
 {
+
     // store the result (no access to member variables here)
     uvc_error_t error;
 
@@ -482,30 +491,29 @@ void UVCCapture::callback(uvc_frame_t *frame, void *ptr)
     uvc_frame_t *bgr_frame;
     bgr_frame = uvc_allocate_frame(frame->width * frame->height * 3);
     if (!bgr_frame) {
-        printf("unable to allocate bgr frame!");
+        printf("Unable to allocate bgr frame!");
         return;
     }
     cv::Mat cv_frame;
-    //cv::Mat cv_frame;
 
     // if compressed video stream, used mjpeg conversion
     if(frame->frame_format == UVC_FRAME_FORMAT_MJPEG) {
         error = uvc_mjpeg2rgb(frame, bgr_frame);
         if (error) {
-            qDebug()<<"frame conversion error";
+            qDebug()<<"MJPEG frame conversion error";
             uvc_free_frame(bgr_frame);
             return;
         }
         else {
+            // make into an opencv frame
             cv_frame = cv::Mat(bgr_frame->height, bgr_frame->width,CV_8UC3, (uchar*)bgr_frame->data, bgr_frame->step);
-            cv::cvtColor(cv_frame, cv_frame,cv::COLOR_BGR2RGB);
         }
     }
     else {
-        // if uncompressed video, use any2bgr
-        error = uvc_any2bgr(frame, bgr_frame);
+        // if uncompressed video, use any2rgb
+        error = uvc_any2rgb(frame, bgr_frame);
         if (error) {
-            qDebug()<<"frame conversion error";
+            qDebug()<<"Uncompressed frame conversion error";
             uvc_free_frame(bgr_frame);
             return;
         }
@@ -518,9 +526,9 @@ void UVCCapture::callback(uvc_frame_t *frame, void *ptr)
 
     //Get this object object
     UVCCapture *capture = reinterpret_cast<UVCCapture*>(ptr);
-
     capture->handleFrame(cv_frame, frame->sequence);
 
     //Free conversion frame memory
     uvc_free_frame(bgr_frame);
+
 }

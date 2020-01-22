@@ -6,28 +6,88 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>220</width>
+    <height>239</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
+  <layout class="QGridLayout" name="gridLayout_2">
    <item row="0" column="0">
     <widget class="QPushButton" name="pushButtonSaveFrame">
      <property name="text">
-      <string>Save Frame</string>
+      <string>Save Frame...</string>
      </property>
     </widget>
    </item>
    <item row="1" column="0">
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string/>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="2" column="0">
+       <widget class="QLabel" name="labelSequenceInterval">
+        <property name="text">
+         <string>Interval</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelSequenceSuffix">
+        <property name="text">
+         <string>Sufffix</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QSpinBox" name="spinBoxSequenceStart">
+        <property name="maximum">
+         <number>999999999</number>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QLabel" name="labelSequenceStart">
+        <property name="text">
+         <string>Start at</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QSpinBox" name="spinBoxSequenceInterval">
+        <property name="suffix">
+         <string> ms</string>
+        </property>
+        <property name="maximum">
+         <number>999999999</number>
+        </property>
+        <property name="value">
+         <number>2000</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLineEdit" name="lineEditSuffix"/>
+      </item>
+      <item row="3" column="0" colspan="3">
+       <widget class="QPushButton" name="pushButtonSaveSequence">
+        <property name="text">
+         <string>Save Sequence...</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="3" column="0">
     <widget class="QPushButton" name="pushButtonRecordVideo">
      <property name="enabled">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <property name="text">
-      <string>Record Video</string>
+      <string>Record Video...</string>
      </property>
     </widget>
    </item>

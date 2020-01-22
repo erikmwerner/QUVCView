@@ -6,6 +6,7 @@
 #include "videowriterwidget.h"
 #include "fpstimer.h"
 
+#include <opencv2/videoio.hpp>
 #include <QLabel>
 #include <QToolButton>
 #include <QDockWidget>
@@ -13,9 +14,8 @@
 #include <QSettings>
 #include <QFileDialog>
 #include <QSemaphore>
+#include <QMessageBox>
 #include <QThread>
-
-//#include <QOpenGLWidget>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -29,7 +29,10 @@ MainWindow::MainWindow(QWidget *parent)
 
 
     // setup capture device
-    m_capture = new UVCCapture(m_frame_buffer_size, m_cap_buffer_free, m_cap_buffer_used, nullptr);
+    m_capture = new UVCCapture(m_frame_buffer_size,
+                               m_cap_buffer_free,
+                               m_cap_buffer_used,
+                               nullptr);
 
     // make a thread for the capture
     m_capture_thread = new QThread(this);
@@ -51,6 +54,8 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::handleFrame);
     connect(m_capture, &UVCCapture::frameRectChanged,
             ui->cameraView, &CameraView::onFrameRectChanged);
+    connect(m_capture, &UVCCapture::capturePropertiesChanged,
+            this, &MainWindow::onCapturePropertiesChanged);
     connect(m_capture, &UVCCapture::statusMessage,
             this, &MainWindow::onCaptureStatusMessage);
     connect(this, &MainWindow::findDevices,
@@ -107,8 +112,15 @@ MainWindow::MainWindow(QWidget *parent)
     m_writer_widget->setWindowTitle("Video Writer");
     connect(writer, &VideoWriterWidget::saveFrame,
             this, &MainWindow::onSaveCurrentFrame);
+    connect(writer, &VideoWriterWidget::startVideoRecording,
+            this, &MainWindow::onStartVideoRecording);
+    connect(writer, &VideoWriterWidget::stopVideoRecording,
+            this, &MainWindow::onStopVideoRecording);
 
      addDockWidget(Qt::LeftDockWidgetArea, m_writer_widget);
+
+     connect(ui->actionAbout, &QAction::triggered,
+             this, &MainWindow::showAbout);
 
     emit findDevices();
 }
@@ -130,7 +142,34 @@ MainWindow::~MainWindow()
         m_capture_thread->wait();
     }
 
+    if(m_recording) {
+        onStopVideoRecording();
+    }
+
     delete ui;
+}
+
+void MainWindow::showAbout()
+{
+    QString title(tr("About UVC View"));
+    QString text(tr("UVC View Version 0.1"));
+    QString info_text(tr("Written 2020\nby Erik Werner\nusing Qt 5.14, libusb 0.0.6, and openCV 4.2."));
+
+
+    //QMessageBox::about(this, title, text);
+
+    QMessageBox message_box;
+    message_box.setWindowTitle(title);
+    message_box.setText(text);
+    message_box.setInformativeText(info_text);
+            message_box.addButton(QMessageBox::Ok);
+
+    message_box.exec();
+}
+
+void MainWindow::onCapturePropertiesChanged(UVCCapture::UVCCaptureProperties properties)
+{
+    m_properties_copy = properties;
 }
 
 void MainWindow::onSetCaptureActive(bool active)
@@ -146,24 +185,49 @@ void MainWindow::handleFrame(const cv::Mat &frame, const int frame_number)
         qDebug()<<"warning: no frame to acquire";
         return;
     }
-    m_frame = frame;
-    m_pix =  cvMatToQPixmap(m_frame);
+    cv::cvtColor(frame, m_frame,cv::COLOR_BGR2RGB, 3);
+    m_pix = cvMatToQPixmap(m_frame);
     ui->cameraView->showFrame(m_pix);
     m_fps_timer->incrementFrame();
+
+    if(m_recording) {
+        m_writer.write(m_frame);
+    }
     // tell the capture the buffer has room for another frame
     m_cap_buffer_free->release();
 }
 
-void MainWindow::onSaveCurrentFrame()
+void MainWindow::onSaveCurrentFrame(const QString &file_name)
 {
-    QSettings settings;
-    QString dir = settings.value("lastImageSaveLocation").toString();
-    QString file_name = QFileDialog::getSaveFileName(this, tr("Save Frame"),
-                               dir, tr("Images (*.png *.xpm *.jpg)"));
-    if(!file_name.isEmpty()) {
-        m_pix.save(file_name, 0, -1);
-        settings.setValue("lastImageSaveLocation", file_name);
+    if(m_pix.isNull()) {
+        return;
     }
+
+    if(m_pix.save(file_name, 0, -1))
+    {
+        ui->statusbar->showMessage("Saved image:"+file_name);
+    }
+}
+
+void MainWindow::onStartVideoRecording(const QString &file_name)
+{
+    int fcc = cv::VideoWriter::fourcc('H','2','6','4');
+    cv::Size s(m_properties_copy.frameRect.width(), m_properties_copy.frameRect.height());
+    int fps = 10000000.0/m_properties_copy.frameInterval;
+    if(m_writer.open(file_name.toStdString(), fcc, fps, s)){
+        ui->statusbar->showMessage("Recording video:"+file_name);
+        m_recording = true;
+    }
+    else {
+        ui->statusbar->showMessage("Unable to open video recorder:"+file_name);
+    }
+}
+
+void MainWindow::onStopVideoRecording()
+{
+    m_writer.release();
+    ui->statusbar->showMessage("Video recording stopped");
+    m_recording = false;
 }
 
 void MainWindow::onCaptureStatusMessage(const QString &message)
