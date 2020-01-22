@@ -32,15 +32,17 @@ typedef enum	{
 #define UVC_GET_DEF 0x87
 
 
+QT_BEGIN_NAMESPACE
+namespace Ui { class MainWindow; }
+QT_END_NAMESPACE
 
 class QDockWidget;
 class QGraphicsPixmapItem;
 class CameraView;
 class UVCCapture;
-
-QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
-QT_END_NAMESPACE
+class FPSTimer;
+class QLabel;
+class QToolButton;
 
 class MainWindow : public QMainWindow
 {
@@ -53,11 +55,21 @@ public:
 public slots:
     void handleFrame(const cv::Mat &frame, const int frame_number);
     void onSaveCurrentFrame();
+    void onCaptureStatusMessage(const QString &message);
+    void onFPSUpdated(double fps);
+    void onToolButtonZoomInClicked();
+    void onToolButtonZoomOutClicked();
+    void onToolButtonZoomResetClicked();
 private:
     Ui::MainWindow *ui;
     QDockWidget* m_settings_widget = nullptr;
     QDockWidget* m_writer_widget = nullptr;
     UVCCapture* m_capture = nullptr;
+    FPSTimer* m_fps_timer = nullptr;
+    QLabel* m_fps_label = nullptr;
+    QToolButton* m_button_zoom_in = nullptr;
+    QToolButton* m_button_zoom_out = nullptr;
+    QToolButton* m_button_zoom_reset = nullptr;
     QPixmap m_pix;
     cv::Mat m_frame;
 };

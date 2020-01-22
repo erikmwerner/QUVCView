@@ -17,6 +17,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     cameraview.cpp \
+    fpstimer.cpp \
     main.cpp \
     mainwindow.cpp \
     uvccapture.cpp \
@@ -27,6 +28,7 @@ SOURCES += \
 
 HEADERS += \
     cameraview.h \
+    fpstimer.h \
     mainwindow.h \
     utlist.h \
     uvccapture.h \
@@ -71,3 +73,6 @@ FORMS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    resources.qrc

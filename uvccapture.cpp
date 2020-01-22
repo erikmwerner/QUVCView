@@ -384,19 +384,21 @@ bool UVCCapture::startStream()
         m_streaming_active = false;
         return false;
     }
-    if(negotiateStream() == UVC_SUCCESS) {
-        m_error = uvc_start_streaming(m_devh, &m_stream_ctrl, callback, this, 0);
-        if(m_error == UVC_SUCCESS) {
-            emit frameRectChanged(m_properties.frameRect);
-            m_streaming_active = true;
-            emit statusMessage("Getting device controls...");
-            getAllCurrentControls();
-            QString status_message("Streaming from device (");
-            status_message += QString::number(m_properties.frameRect.width()) + "x";
-            status_message += QString::number(m_properties.frameRect.height()) + ")";
-            emit statusMessage(status_message);
-            qDebug()<<"UVC streaming started";
-            return true;
+    if(m_devh){
+        if(negotiateStream() == UVC_SUCCESS) {
+            m_error = uvc_start_streaming(m_devh, &m_stream_ctrl, callback, this, 0);
+            if(m_error == UVC_SUCCESS) {
+                emit frameRectChanged(m_properties.frameRect);
+                m_streaming_active = true;
+                emit statusMessage("Getting device controls...");
+                getAllCurrentControls();
+                QString status_message("Streaming from device (");
+                status_message += QString::number(m_properties.frameRect.width()) + "x";
+                status_message += QString::number(m_properties.frameRect.height()) + ")";
+                emit statusMessage(status_message);
+                qDebug()<<"UVC streaming started";
+                return true;
+            }
         }
     }
     m_streaming_active = false;

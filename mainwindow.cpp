@@ -4,7 +4,10 @@
 #include "cameraview.h"
 #include "uvccapture.h"
 #include "videowriterwidget.h"
+#include "fpstimer.h"
 
+#include <QLabel>
+#include <QToolButton>
 #include <QDockWidget>
 #include <stdio.h>
 #include <QSettings>
@@ -20,13 +23,39 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     setWindowTitle("UVC View");
 
-
+    // setup capture device
     m_capture = new UVCCapture(this);
     connect(m_capture, &UVCCapture::frameAvailable,
             this, &MainWindow::handleFrame);
     connect(m_capture, &UVCCapture::frameRectChanged,
             ui->cameraView, &CameraView::onFrameRectChanged);
+    connect(m_capture, &UVCCapture::statusMessage,
+            this, &MainWindow::onCaptureStatusMessage);
 
+    // add FPS counter
+    m_fps_label = new QLabel(this);
+    m_fps_timer = new FPSTimer(this);
+    m_fps_timer->setRunning(true);
+    connect(m_fps_timer, &FPSTimer::fpsUpdated,
+            this, &MainWindow::onFPSUpdated);
+    ui->statusbar->addPermanentWidget(m_fps_label);
+
+    // add toolbuttons to control zoom
+    m_button_zoom_in = new QToolButton(this);
+    connect(m_button_zoom_in, &QToolButton::clicked,
+            this, &MainWindow::onToolButtonZoomInClicked);
+    m_button_zoom_out = new QToolButton(this);
+    connect(m_button_zoom_out, &QToolButton::clicked,
+            this, &MainWindow::onToolButtonZoomOutClicked);
+    m_button_zoom_reset = new QToolButton(this);
+    connect(m_button_zoom_reset, &QToolButton::clicked,
+            this, &MainWindow::onToolButtonZoomResetClicked);
+    m_button_zoom_in->setIcon(QIcon(":/icons/zoom-in.png"));
+    m_button_zoom_out->setIcon(QIcon(":/icons/zoom-out.png"));
+    m_button_zoom_reset->setIcon(QIcon(":/icons/zoom-reset.png"));
+    ui->statusbar->addPermanentWidget(m_button_zoom_in);
+    ui->statusbar->addPermanentWidget(m_button_zoom_out);
+    ui->statusbar->addPermanentWidget(m_button_zoom_reset);
 
     m_settings_widget = new QDockWidget(this);
     m_settings_widget->setFeatures(
@@ -64,6 +93,7 @@ void MainWindow::handleFrame(const cv::Mat &frame, const int frame_number)
     m_frame = frame;
     m_pix =  cvMatToQPixmap(m_frame);
     ui->cameraView->showFrame(m_pix);
+    m_fps_timer->incrementFrame();
 }
 
 void MainWindow::onSaveCurrentFrame()
@@ -76,4 +106,29 @@ void MainWindow::onSaveCurrentFrame()
         m_pix.save(file_name, 0, -1);
         settings.setValue("lastImageSaveLocation", file_name);
     }
+}
+
+void MainWindow::onCaptureStatusMessage(const QString &message)
+{
+    ui->statusbar->showMessage(message);
+}
+
+void MainWindow::onFPSUpdated(double fps)
+{
+    m_fps_label->setText(QString::number(fps,'g',2) + " (FPS)");
+}
+
+void MainWindow::onToolButtonZoomInClicked()
+{
+    ui->cameraView->setScaleFactor(1.0/0.75);
+}
+
+void MainWindow::onToolButtonZoomOutClicked()
+{
+    ui->cameraView->setScaleFactor(0.75);
+}
+
+void MainWindow::onToolButtonZoomResetClicked()
+{
+    ui->cameraView->setScaleFactor(1.0);
 }

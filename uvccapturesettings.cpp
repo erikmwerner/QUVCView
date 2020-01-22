@@ -18,8 +18,6 @@ UVCCaptureSettings::UVCCaptureSettings(UVCCapture *parent) :
             this,&UVCCaptureSettings::onDevicesFound);
     connect(parent, &UVCCapture::foundCaptureProperties,
             this,&UVCCaptureSettings::onSupportedFormatsFound);
-    connect(parent, &UVCCapture::statusMessage,
-            this,&UVCCaptureSettings::displayStatusMessage);
     connect(ui->pushButtonRefresh, &QPushButton::clicked,
             parent,&UVCCapture::findDevices);
     connect(ui->pushButtonConnect, &QPushButton::clicked,
@@ -300,11 +298,6 @@ UVCCaptureSettings::~UVCCaptureSettings()
     delete ui;
 }
 
-void UVCCaptureSettings::displayStatusMessage(QString message)
-{
-    ui->labelDevice->setText(message);
-}
-
 /*!
  * \brief UVCCaptureSettings::onDevicesFound populate a combobox
  * with information about the current UVC devices connected
@@ -330,8 +323,6 @@ void UVCCaptureSettings::onDevicesFound(QVector<UVCCapture::UVCCaptureDescriptor
         ui->comboBoxDevices->setItemData(index, QVariant(device.serial), Qt::UserRole + 2);
         ui->comboBoxDevices->setItemData(index, description_string, Qt::ToolTipRole);
     }
-    QString status_string("Found " + QString::number(devices.length()) + " UVC device(s)");
-    displayStatusMessage(status_string);
 
     if(devices.length() == 0) {
         ui->comboBoxDevices->addItem("No devices found");

@@ -23,7 +23,6 @@ signals:
 
 public slots:
     void onSupportedFormatsFound(QVector<UVCCapture::UVCCaptureProperties>);
-    void displayStatusMessage(QString message);
     void onDevicesFound(QVector<UVCCapture::UVCCaptureDescriptor> devices);
 
 private slots:
