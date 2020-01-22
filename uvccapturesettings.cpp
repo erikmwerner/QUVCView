@@ -20,6 +20,8 @@ UVCCaptureSettings::UVCCaptureSettings(UVCCapture *parent) :
             parent,&UVCCapture::findDevices);
     connect(ui->pushButtonConnect, &QPushButton::clicked,
             parent,&UVCCapture::startStream);
+    connect(ui->pushButtonDisconnect, &QPushButton::clicked,
+            parent,&UVCCapture::stopStream);
     connect(this, &UVCCaptureSettings::openDevice,
             parent, &UVCCapture::openDevice);
     connect(this, &UVCCaptureSettings::capturePropertiesChanged,
@@ -27,27 +29,84 @@ UVCCaptureSettings::UVCCaptureSettings(UVCCapture *parent) :
 
     int rows = ui->gridLayout->rowCount();
     func_uvc cb1, cb2;
+
+    // Focus
     cb1.uvc_cb_u16 = uvc_set_focus_abs;
     cb2.uvc_cb_u8 = uvc_set_focus_auto;
-    ui->gridLayout->addWidget(new UVCControlWidget(
-                                  cb1, 'u16', cb2, 'u8', 1, 0, m_parent->handlePtr(),
-                                  "Auto Focus", " mm", this), rows++,0, 1, 2);
+    UVCControlWidget* w = new UVCControlWidget(
+                cb1, 'u16', cb2, 'u8', 1, 0, m_parent->handlePtr(),
+                "Focus", " mm", this);
 
+    // TODO: get range from UVC_GET_MIN and UVC_GET_MAX
+    w->setRange(0, 1023);
+    ui->verticalLayout->addWidget(w);
+    //ui->gridLayout->addWidget(w, rows++,0, 1, 2);
+
+    // Exposure
     cb1.uvc_cb_u32 = uvc_set_exposure_abs;
     cb2.uvc_cb_u8 = uvc_set_ae_mode;
-    ui->gridLayout->addWidget(new UVCControlWidget(
-                                  cb1, 'u32',  cb2, 'u8', 2, 1, m_parent->handlePtr(),
-                                  "Auto Exposure", " us", this), rows++,0, 1, 2);
+    w = new UVCControlWidget(
+                cb1, 'u32',  cb2, 'u8', 8, 1, m_parent->handlePtr(),
+                "Exposure", " us*100", this);
+    w->setRange(50, 10000);
+    ui->verticalLayout->addWidget(w);
+    //ui->gridLayout->addWidget(w, rows++,0, 1, 2);
 
-    cb1.uvc_cb_u16 = uvc_set_contrast;
-    ui->gridLayout->addWidget(new UVCControlWidget(
-                                  cb1, 'u16', m_parent->handlePtr(),
-                                  "Contrast", "", this), rows++,0, 1, 2);
-
+    // brightness
     cb1.uvc_cb_16 = uvc_set_brightness;
-    ui->gridLayout->addWidget(new UVCControlWidget(
-                                  cb1, '16', m_parent->handlePtr(),
-                                  "Brightness", "", this), rows++,0, 1, 2);
+    w = new UVCControlWidget(
+                cb1, '16', m_parent->handlePtr(),
+                "Brightness", "", this);
+    w->setRange(0, 100);
+    ui->verticalLayout->addWidget(w);
+    //ui->gridLayout->addWidget(w, rows++,0, 1, 2);
+
+    // contrast
+    cb1.uvc_cb_u16 = uvc_set_contrast;
+    w = new UVCControlWidget(
+                cb1, 'u16', m_parent->handlePtr(),
+                "Contrast", "", this);
+    w->setRange(-64, 64);
+    ui->verticalLayout->addWidget(w);
+    //ui->gridLayout->addWidget(w, rows++,0, 1, 2);
+
+    // hue
+    cb1.uvc_cb_16 = uvc_set_hue;
+    cb2.uvc_cb_u8 = uvc_set_hue_auto;
+    w = new UVCControlWidget(
+                cb1, '16', cb2, 'u8', 1, 0, m_parent->handlePtr(),
+                "Hue", "", this);
+    w->setRange(-180, 180);
+    ui->verticalLayout->addWidget(w);
+    //ui->gridLayout->addWidget(w, rows++,0, 1, 2);
+
+    // saturation
+    cb1.uvc_cb_u16 = uvc_set_saturation;
+    w = new UVCControlWidget(
+                cb1, 'u16', m_parent->handlePtr(),
+                "Saturation", "", this);
+    w->setRange(0, 100);
+    ui->verticalLayout->addWidget(w);
+    //ui->gridLayout->addWidget(w, rows++,0, 1, 2);
+
+    // sharpness
+    cb1.uvc_cb_u16 = uvc_set_contrast;
+    cb2.uvc_cb_u8 = uvc_set_contrast_auto;
+    w = new UVCControlWidget(
+                cb1, 'u16', cb2, 'u8', 1, 0, m_parent->handlePtr(),
+                "Sharpness", "", this);
+    w->setRange(0, 100);
+    ui->verticalLayout->addWidget(w);
+    //ui->gridLayout->addWidget(w, rows++,0, 1, 2);
+
+    // gamma
+    cb1.uvc_cb_u16 = uvc_set_gamma;
+    w = new UVCControlWidget(
+                cb1, 'u16', m_parent->handlePtr(),
+                "Gamma", "", this);
+    w->setRange(100, 500);
+    ui->verticalLayout->addWidget(w);
+    //ui->gridLayout->addWidget(w, rows++,0, 1, 2);
 }
 
 UVCCaptureSettings::~UVCCaptureSettings()
@@ -127,7 +186,7 @@ void UVCCaptureSettings::onSupportedFormatsFound(QVector<UVCCapture::UVCCaptureP
  */
 void UVCCaptureSettings::on_comboBoxDevices_currentIndexChanged(int index)
 {
-    qDebug()<<"cb index changed"<<index<<"text"<<ui->comboBoxDevices->itemText(index);
+    qDebug()<<"device cb index changed"<<index<<"text"<<ui->comboBoxDevices->itemText(index);
 
     int vid = ui->comboBoxDevices->itemData(index, Qt::UserRole).toInt();
     int pid = ui->comboBoxDevices->itemData(index, Qt::UserRole + 1).toInt();
@@ -139,7 +198,7 @@ void UVCCaptureSettings::on_comboBoxDevices_currentIndexChanged(int index)
 
 void UVCCaptureSettings::on_comboBoxFormat_currentIndexChanged(int index)
 {
-    qDebug()<<"cb index changed"<<index<<"text"<<ui->comboBoxFormat->itemText(index);
+    qDebug()<<"format cb index changed"<<index<<"text"<<ui->comboBoxFormat->itemText(index);
     QVariant v =  ui->comboBoxFormat->itemData(index,Qt::UserRole);
     UVCCapture::UVCCaptureProperties p = v.value<UVCCapture::UVCCaptureProperties>();
     emit capturePropertiesChanged(p);

@@ -20,6 +20,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     uvccapture.cpp \
+    uvccapturecontrols.cpp \
     uvccapturesettings.cpp \
     uvccontrolwidget.cpp
 
@@ -28,6 +29,7 @@ HEADERS += \
     mainwindow.h \
     utlist.h \
     uvccapture.h \
+    uvccapturecontrols.h \
     uvccapturesettings.h \
     uvccontrolwidget.h
 

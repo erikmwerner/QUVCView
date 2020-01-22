@@ -27,11 +27,13 @@ public:
         QString formatString;
         QRect frameRect;
         int frameInterval;
+        unsigned int bufferSize;
         UVCCaptureProperties():
             format(UVC_FRAME_FORMAT_YUYV),
             formatString("YUYV"),
             frameRect(QRect(0,0,640,480)),
-            frameInterval(333333) {}
+            frameInterval(333333),
+            bufferSize(0){}
     };
 
 
@@ -40,17 +42,18 @@ public:
     ~UVCCapture();
     int initUVC();
     void closeUVC();
-    void closeDevice();
 
     uvc_device_handle_t** handlePtr() {return &m_devh;}
 
-    void startStream();
+    uvc_error negotiateStream();
+
 public slots:
     void findDevices();
     int openDevice(int vid = 0, int pid = 0, QString serial_number = QString());
     void checkDeviceCapabilities(uvc_device_handle_t *devh);
-    void openDevicePtr(uvc_device_t *dev);
     void setCaptureProperties(UVCCaptureProperties properties);
+    bool startStream();
+    void stopStream();
 
 signals:
 
@@ -85,7 +88,15 @@ private:
     //<
     UVCCaptureProperties m_properties;
 
+    //<
+    bool m_streaming_active = false;
 
+    //<
+    bool m_uvc_open = false;
+
+
+    void getControlInfo(uint8_t ctrl);
+    void test();
 };
 
 Q_DECLARE_METATYPE(cv::Mat)
