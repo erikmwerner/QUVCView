@@ -10,13 +10,13 @@
 * Pinch-to-zozom gesture support
 
 ## Dependencies
-Install Qt
-brew install opencv
-brew install libuvc
+*Qt
+*brew install opencv
+*brew install libuvc
 
 ## See also
-openCV
-libusb
-libuvc https://github.com/libuvc/libuvc
-VVUVCKit https://github.com/mrRay/VVUVCKit
-UVC Camera Control for Mac OS X https://phoboslab.org/log/2009/07/uvc-camera-control-for-mac-os-x
+* openCV
+* libusb
+* libuvc https://github.com/libuvc/libuvc
+* VVUVCKit https://github.com/mrRay/VVUVCKit
+* UVC Camera Control for Mac OS X https://phoboslab.org/log/2009/07/uvc-camera-control-for-mac-os-x
