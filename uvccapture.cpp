@@ -434,6 +434,7 @@ bool UVCCapture::startStream()
 void UVCCapture::stopStream()
 {
     if(m_streaming_active) {
+        qDebug()<<"UVC stopping stream...";
         // End the stream. Blocks until last callback is serviced
         uvc_stop_streaming(m_devh);
         // set a flag to remember streaming has been stopped
@@ -483,7 +484,6 @@ void UVCCapture::handleFrame(const cv::Mat &frame, int frame_number)
  */
 void UVCCapture::callback(uvc_frame_t *frame, void *ptr)
 {
-
     // store the result (no access to member variables here)
     uvc_error_t error;
 
@@ -530,5 +530,4 @@ void UVCCapture::callback(uvc_frame_t *frame, void *ptr)
 
     //Free conversion frame memory
     uvc_free_frame(bgr_frame);
-
 }

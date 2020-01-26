@@ -1,4 +1,4 @@
-QT       += core gui
+QT += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -14,6 +14,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
+
 
 SOURCES += \
     cameraview.cpp \
@@ -37,32 +38,6 @@ HEADERS += \
     uvccontrolwidget.h \
     videowriterwidget.h
 
-OPENCV_PATH = /usr/local/Cellar/opencv/4.2.0_1
-LIBS += -L/$$OPENCV_PATH/lib/ \
-            -lopencv_core \
-            -lopencv_bgsegm \
-            -lopencv_imgproc \
-            -lopencv_highgui \
-            -lopencv_ml \
-            -lopencv_video \
-            -lopencv_features2d \
-            -lopencv_calib3d \
-            -lopencv_objdetect \
-            #-lopencv_contrib \
-            #-lopencv_legacy \
-            -lopencv_flann \
-            -lopencv_videoio
-
-INCLUDEPATH += $$OPENCV_PATH/include/opencv4
-DEPENDPATH += $$OPENCV_PATH/include
-
-LIBUVC_PATH = /usr/local/Cellar/libuvc/0.0.6
-LIBS += -L/$$LIBUVC_PATH/lib/ \
-            -luvc
-
-INCLUDEPATH += $$LIBUVC_PATH/include
-DEPENDPATH += $$LIBUVC_PATH/include
-
 FORMS += \
     mainwindow.ui \
     uvccapturesettings.ui \
@@ -76,3 +51,24 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 RESOURCES += \
     resources.qrc
+
+macx {
+    ICON = icons/QUVCView.icns
+    QMAKE_INFO_PLIST = Info.plist
+    CONFIG += app_bundle
+    OPENCV_PATH = /usr/local/Cellar/opencv/4.2.0_1
+    LIBS += -L/$$OPENCV_PATH/lib/ \
+            -lopencv_core \
+            -lopencv_imgproc \
+            -lopencv_videoio
+
+    INCLUDEPATH += $$OPENCV_PATH/include/opencv4
+    DEPENDPATH += $$OPENCV_PATH/include
+
+    LIBUVC_PATH = /usr/local/Cellar/libuvc/0.0.6
+    LIBS += -L/$$LIBUVC_PATH/lib/ \
+            -luvc
+
+    INCLUDEPATH += $$LIBUVC_PATH/include
+    DEPENDPATH += $$LIBUVC_PATH/include
+}

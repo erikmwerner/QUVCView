@@ -18,11 +18,14 @@
 #include <QThread>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+    : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    setWindowTitle("UVC View");
+    setWindowTitle("QUVCView");
+
+    QImage img(":icons/QUVCView.png");
+    QIcon icon(QPixmap::fromImage(img));
+    setWindowIcon(icon);
 
     m_cap_buffer_free = new QSemaphore(m_frame_buffer_size);
     m_cap_buffer_used = new QSemaphore();
@@ -76,12 +79,15 @@ MainWindow::MainWindow(QWidget *parent)
 
     // add toolbuttons to control zoom
     m_button_zoom_in = new QToolButton(this);
+    m_button_zoom_in->setToolTip("Zoom in");
     connect(m_button_zoom_in, &QToolButton::clicked,
             this, &MainWindow::onToolButtonZoomInClicked);
     m_button_zoom_out = new QToolButton(this);
+    m_button_zoom_out->setToolTip("Zoom out");
     connect(m_button_zoom_out, &QToolButton::clicked,
             this, &MainWindow::onToolButtonZoomOutClicked);
     m_button_zoom_reset = new QToolButton(this);
+    m_button_zoom_reset->setToolTip("Reset zoom");
     connect(m_button_zoom_reset, &QToolButton::clicked,
             this, &MainWindow::onToolButtonZoomResetClicked);
     m_button_zoom_in->setIcon(QIcon(":/icons/zoom-in.png"));
@@ -151,8 +157,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::showAbout()
 {
-    QString title(tr("About UVC View"));
-    QString text(tr("UVC View Version 0.1"));
+    QString title(tr("About QUVCView"));
+    QString text(tr("QUVCView Version 0.1"));
     QString info_text(tr("Written 2020\nby Erik Werner\nusing Qt 5.14, libusb 0.0.6, and openCV 4.2."));
 
 
@@ -162,7 +168,8 @@ void MainWindow::showAbout()
     message_box.setWindowTitle(title);
     message_box.setText(text);
     message_box.setInformativeText(info_text);
-            message_box.addButton(QMessageBox::Ok);
+    message_box.setIconPixmap(windowIcon().pixmap(64,64));
+    message_box.addButton(QMessageBox::Ok);
 
     message_box.exec();
 }
@@ -203,6 +210,7 @@ void MainWindow::onSaveCurrentFrame(const QString &file_name)
         return;
     }
 
+    // select file format from file_name suffix
     if(m_pix.save(file_name, 0, -1))
     {
         ui->statusbar->showMessage("Saved image:"+file_name);

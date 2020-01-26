@@ -3,5 +3,7 @@
         <file>icons/zoom-in.png</file>
         <file>icons/zoom-out.png</file>
         <file>icons/zoom-reset.png</file>
+        <file>icons/QUVCView.icns</file>
+        <file>icons/QUVCView.png</file>
     </qresource>
 </RCC>

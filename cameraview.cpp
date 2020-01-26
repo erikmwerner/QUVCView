@@ -11,7 +11,7 @@ CameraView::CameraView(QWidget *parent) : QGraphicsView(parent)
     this->setScene(m_scene);
     setSceneRect(QRect(0,0,640,480));
     QPixmap temp(640,480);
-    temp.fill(Qt::green);
+    temp.fill(Qt::black);
     m_pixmap_frame = new QGraphicsPixmapItem(temp);
     m_scene->addItem(m_pixmap_frame);
 
