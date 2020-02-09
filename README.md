@@ -9,7 +9,7 @@
 * Save videos
 * Save still images
 * Automatically sequences of images
-* Pinch-to-zozom gesture support
+* Pinch-to-zoom gesture support
 
 ## Dependencies
 * Qt
