@@ -1,5 +1,7 @@
-# Qt UVC View
- macOS will stream video from most UVC cameras, but it does not include support for any UVC controls (focus, exposure, gain, etc). Qt UVC View is a simple application for controlling and viewing video from UVC compatible USB camera devices built. It is made using Qt (GUI), libuvc (camera communication), and openCV (video writing).
+# QUVC View
+ macOS will stream video from most UVC cameras, but it does not include support for any UVC controls (focus, exposure, gain, etc). QUVC View is a simple application for controlling and viewing video from UVC compatible USB camera devices built. It is made using Qt (GUI), libuvc (camera communication), and openCV (video writing).
+
+ ![QUVC View](QUVCView_screenshot.jpg "QUVC View")
 
 ## Features
 * UVC device discovery
@@ -10,9 +12,9 @@
 * Pinch-to-zozom gesture support
 
 ## Dependencies
-*Qt
-*brew install opencv
-*brew install libuvc
+* Qt
+* brew install opencv
+* brew install libuvc
 
 ## See also
 * openCV
