@@ -129,6 +129,7 @@ private:
     void testControlInfo(uint8_t ctrl);
     void test();
 
+    void handleError(uvc_error_t error);
 };
 
 Q_DECLARE_METATYPE(cv::Mat)

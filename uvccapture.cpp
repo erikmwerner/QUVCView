@@ -54,7 +54,7 @@ int UVCCapture::initUVC()
    * from an existing libusb context. */
     m_error = uvc_init(&m_context, nullptr);
     if (m_error) {
-        qDebug()<<"UVC could not initialize";
+        handleError(m_error);
         uvc_perror(m_error, "uvc_init");
         m_uvc_open = false;
         return m_error;
@@ -79,7 +79,7 @@ void UVCCapture::findDevices()
     uvc_device_t **list;
     m_error = uvc_get_device_list(m_context, &list);
     if(m_error < 0 ) {
-        qDebug()<<"error listing devices";
+        handleError(m_error);
         uvc_perror(m_error, "find devices");
     }
 
@@ -328,10 +328,10 @@ int UVCCapture::openDevice(int vid, int pid, QString serial_number)
 
     qDebug()<<"Opening UVC device vid:"<<vid<<"pid"<<pid<<"sn"<<serial_number;
     //m_error = uvc_find_device(m_context, &m_dev,vid, pid, nullptr); /* filter devices: vendor_id, product_id, "serial_num" */
-    m_error = uvc_find_device(m_context, &m_dev,vid, pid, serial_number.toUtf8().constData()); /* filter devices: vendor_id, product_id, "serial_num" */
+    m_error = uvc_find_device(m_context, &m_dev, vid, pid, serial_number.toUtf8().constData()); /* filter devices: vendor_id, product_id, "serial_num" */
     if (m_error < 0) {
-        qDebug()<<"uvc find device: no device found";
-        uvc_perror(m_error, "uvc_find_device"); /* no devices found */
+        handleError(m_error);
+        uvc_perror(m_error, "uvc_find_device"); // no devices found
         return m_error;
     }
     else
@@ -343,8 +343,8 @@ int UVCCapture::openDevice(int vid, int pid, QString serial_number)
         m_error = uvc_open(m_dev, &m_devh);
         //m_controls->setHandle(m_devh);
         if (m_error < 0) {
-            // unable to open device
-            uvc_perror(m_error, "uvc_open");
+            handleError(m_error);
+            uvc_perror(m_error, "uvc_open"); // unable to open device
             return m_error;
         }
         else
@@ -379,6 +379,7 @@ uvc_error UVCCapture::negotiateStream()
                 );
 
     if (m_error < 0) {
+        handleError(m_error);
         // device doesn't provide a matching stream
         uvc_perror(m_error, "get_mode");
     }
@@ -473,6 +474,15 @@ void UVCCapture::handleFrame(const cv::Mat &frame, int frame_number)
         // advance the next index for the frame buffer
         m_next_index = (m_next_index + 1) % m_frame_buffer.length();
     }
+}
+
+void UVCCapture::handleError(uvc_error_t error)
+{
+    QString err_str = "UVC Error:";
+    err_str += QString::number( static_cast<int>(error) );
+    err_str += " ";
+    err_str += uvc_strerror(error);
+    emit statusMessage(err_str);
 }
 
 

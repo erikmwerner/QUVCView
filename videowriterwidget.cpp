@@ -4,6 +4,7 @@
 #include <QSettings>
 #include <QFileInfo>
 #include <QFileDialog>
+#include <QStandardPaths>
 
 VideoWriterWidget::VideoWriterWidget(QWidget *parent) :
     QWidget(parent),
@@ -23,9 +24,15 @@ VideoWriterWidget::~VideoWriterWidget()
 void VideoWriterWidget::on_pushButtonSaveFrame_clicked()
 {
     QSettings settings;
-    QString dir = settings.value("lastImageSaveLocation").toString();
+    QString dir;
+    if(settings.contains("lastImageSaveLocation")) {
+        dir = settings.value("lastImageSaveLocation").toString();
+    }
+    else {
+        dir = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
+    }
     QString file_name = QFileDialog::getSaveFileName(this, tr("Save Frame"),
-                               dir, tr("Images (*.png *.xpm *.jpg)"));
+                                                     dir, tr("Images (*.png *.xpm *.jpg)"));
     if(!file_name.isEmpty()) {
         emit saveFrame(file_name);
         settings.setValue("lastImageSaveLocation", file_name);
@@ -60,9 +67,15 @@ void VideoWriterWidget::on_pushButtonSaveSequence_clicked()
     }
     else {
         QSettings settings;
-        QString dir = settings.value("lastImageSequenceLocation").toString();
+        QString dir;
+        if(settings.contains("lastImageSequenceLocation")) {
+            dir = settings.value("lastImageSequenceLocation").toString();
+        }
+        else {
+            dir = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
+        }
         QString file_name = QFileDialog::getSaveFileName(this, tr("Save Sequence"),
-                                   dir, tr("Images (*.png *.xpm *.jpg)"));
+                                                         dir, tr("Images (*.png *.xpm *.jpg)"));
         if(!file_name.isEmpty()) {
             m_base_file_name = file_name;
             onSequenceTimerTimeout();
@@ -78,9 +91,15 @@ void VideoWriterWidget::on_pushButtonRecordVideo_clicked()
 {
     if( ui->pushButtonRecordVideo->text() == "Record Video..."){
         QSettings settings;
-        QString dir = settings.value("lastVideoSaveLocation").toString();
+        QString dir;
+        if(settings.contains("lastVideoSaveLocation")) {
+            dir = settings.value("lastVideoSaveLocation").toString();
+        }
+        else {
+            dir = QStandardPaths::writableLocation(QStandardPaths::MoviesLocation);
+        }
         QString file_name = QFileDialog::getSaveFileName(this, tr("Save Frame"),
-                                   dir, tr("Videos (*.mp4)"));
+                                                         dir, tr("Videos (*.mp4)"));
         if(!file_name.isEmpty()) {
             settings.setValue("lastVideoSaveLocation", file_name);
             emit startVideoRecording(file_name);

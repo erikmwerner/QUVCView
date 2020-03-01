@@ -22,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     setWindowTitle("QUVCView");
+    setDockNestingEnabled(true);
 
     QImage img(":icons/QUVCView.png");
     QIcon icon(QPixmap::fromImage(img));
@@ -98,21 +99,35 @@ MainWindow::MainWindow(QWidget *parent)
     ui->statusbar->addPermanentWidget(m_button_zoom_reset);
 
     m_settings_widget = new QDockWidget(this);
-    m_settings_widget->setFeatures(
-                QDockWidget::DockWidgetMovable |
-                QDockWidget::DockWidgetFloatable);
+    auto* action_settings = new QAction("Capture Settings", this);
+        action_settings->setCheckable(true);
+        action_settings->setChecked(true);
+        action_settings->setData( qVariantFromValue(static_cast<void *>(m_settings_widget)));
+        connect(action_settings,SIGNAL(triggered(bool)),
+                m_settings_widget,SLOT(setVisible(bool)));
+        connect(m_settings_widget,SIGNAL(visibilityChanged(bool)),
+                action_settings,SLOT(setChecked(bool)));
+        ui->menuWindow->addAction(action_settings);
 
     UVCCaptureSettings* capture_settings = new UVCCaptureSettings(m_capture, this);
     m_settings_widget->setWidget(capture_settings);
     m_settings_widget->setWindowTitle("Capture Settings");
     connect(capture_settings, &UVCCaptureSettings::setCaptureActive,
             this, &MainWindow::onSetCaptureActive);
+
     addDockWidget(Qt::LeftDockWidgetArea, m_settings_widget);
 
     m_writer_widget = new QDockWidget(this);
-    m_writer_widget->setFeatures(
-                QDockWidget::DockWidgetMovable |
-                QDockWidget::DockWidgetFloatable);
+    auto* action_writer = new QAction("Video Writer", this);
+        action_writer->setCheckable(true);
+        action_writer->setChecked(true);
+        action_writer->setData( qVariantFromValue(static_cast<void *>(m_writer_widget)));
+        connect(action_writer,SIGNAL(triggered(bool)),
+                m_writer_widget,SLOT(setVisible(bool)));
+        connect(m_writer_widget,SIGNAL(visibilityChanged(bool)),
+                action_writer,SLOT(setChecked(bool)));
+        ui->menuWindow->addAction(action_writer);
+
     VideoWriterWidget* writer = new VideoWriterWidget(this);
     m_writer_widget->setWidget(writer);
     m_writer_widget->setWindowTitle("Video Writer");
@@ -139,7 +154,7 @@ MainWindow::~MainWindow()
     while(m_cap_buffer_used->available() > 0){
         m_cap_buffer_used->acquire();
         m_cap_buffer_free->release();
-        this->thread()->msleep(50);
+        this->thread()->msleep(10);
         qDebug()<<"capture buffer draining...";
     }
     // let the capture thread shutdown
@@ -158,7 +173,7 @@ MainWindow::~MainWindow()
 void MainWindow::showAbout()
 {
     QString title(tr("About QUVCView"));
-    QString text(tr("QUVCView Version 0.1"));
+    QString text(tr("QUVCView Version 0.2"));
     QString info_text(tr("Written 2020\nby Erik Werner\nusing Qt 5.14, libusb 0.0.6, and openCV 4.2."));
 
 
@@ -233,9 +248,24 @@ void MainWindow::onStartVideoRecording(const QString &file_name)
 
 void MainWindow::onStopVideoRecording()
 {
+    // temporarily stop capture
+    emit setCaptureActive(false);
+
+    // prevent capture thread from emitting new frames
+    int n_cap = 0;
+    while(m_cap_buffer_free->available() > 0){
+        if(m_cap_buffer_free->tryAcquire()) {
+            n_cap++;
+        }
+    }
     m_writer.release();
-    ui->statusbar->showMessage("Video recording stopped");
     m_recording = false;
+    ui->statusbar->showMessage("Video recording stopped");
+
+    // release the frame buffer resources
+    m_cap_buffer_free->release(n_cap);
+    // resume capture
+    emit setCaptureActive(true);
 }
 
 void MainWindow::onCaptureStatusMessage(const QString &message)
