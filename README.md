@@ -1,5 +1,5 @@
 # QUVC View
-macOS will stream video from most UVC cameras, but it does not include support for any UVC controls (focus, exposure, gain, etc). QUVC View is a simple application for controlling and viewing video from UVC compatible USB camera devices built. It is made using Qt (GUI), libuvc (camera communication), and OpenCV (video writing).
+macOS will stream video from most UVC cameras, but it does not include support for any UVC controls (focus, exposure, gain, etc). QUVC View is a simple application for controlling and viewing video from UVC compatible USB camera devices. It is made using Qt (GUI), libuvc (camera communication), and OpenCV (video writing).
 
 ![QUVC View](QUVCView_screenshot.jpg "QUVC View")
 
@@ -20,8 +20,8 @@ macOS will stream video from most UVC cameras, but it does not include support f
 Many of the UVC controls were modified from [UVC Camera Control for Mac OS X](https://phoboslab.org/log/2009/07/uvc-camera-control-for-mac-os-x)
 
 ## See also
-* openCV
-* libusb
-* libuvc https://github.com/libuvc/libuvc
-* VVUVCKit https://github.com/mrRay/VVUVCKit
-* UVC Camera Control for Mac OS X https://phoboslab.org/log/2009/07/uvc-camera-control-for-mac-os-x
+* [openCV](https://opencv.org)
+* [libusb](https://libusb.info)
+* [libuvc](https://github.com/libuvc/libuvc)
+* [VVUVCKit](https://github.com/mrRay/VVUVCKit)
+* [UVC Camera Control for Mac OS X](https://phoboslab.org/log/2009/07/uvc-camera-control-for-mac-os-x)
