@@ -173,8 +173,8 @@ MainWindow::~MainWindow()
 void MainWindow::showAbout()
 {
     QString title(tr("About QUVCView"));
-    QString text(tr("QUVCView Version 0.2"));
-    QString info_text(tr("Written 2020\nby Erik Werner\nusing Qt 5.14, libusb 0.0.6, and openCV 4.2."));
+    QString text(tr("QUVCView Version 0.3"));
+    QString info_text(tr("Written 2020\nby Erik Werner with contributions from Falko Richter\nusing Qt 6.7.3, libuvc 0.0.7, and openCV 4.10."));
 
 
     //QMessageBox::about(this, title, text);
