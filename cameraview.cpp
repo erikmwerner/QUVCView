@@ -34,9 +34,9 @@ void CameraView::scaleByFactor(qreal factor)
 
 void CameraView::setScaleFactor(const qreal scale_factor)
 {
-    QMatrix matrix;
-    matrix.scale(scale_factor, scale_factor);
-    setMatrix(matrix);
+    QTransform transform;
+    transform.scale(scale_factor, scale_factor);
+    setTransform(transform);
     m_scale_factor = scale_factor;
     qDebug()<<"Camera view scale factor set:"<<m_scale_factor;
 }
@@ -83,7 +83,7 @@ void CameraView::pinchTriggered(QPinchGesture *gesture)
     }
     // Compute the scale factor based on the current pinch level
     qreal sxy = m_scale_factor * currentStepScaleFactor;
-    QMatrix matrix;
-    matrix.scale(sxy, sxy);
-    setMatrix(matrix);
+    QTransform transform;
+    transform.scale(sxy, sxy);
+    setTransform(transform);
 }
