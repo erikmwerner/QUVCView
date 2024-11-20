@@ -6,25 +6,18 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>220</width>
-    <height>239</height>
+    <width>361</width>
+    <height>392</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
-   <item row="0" column="0">
-    <widget class="QPushButton" name="pushButtonSaveFrame">
-     <property name="text">
-      <string>Save Frame...</string>
-     </property>
-    </widget>
-   </item>
    <item row="1" column="0">
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string/>
+      <string>Timed Acquisition</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="2" column="0">
@@ -51,7 +44,7 @@
       <item row="1" column="0" colspan="2">
        <widget class="QLabel" name="labelSequenceStart">
         <property name="text">
-         <string>Start at</string>
+         <string>Index</string>
         </property>
        </widget>
       </item>
@@ -89,6 +82,63 @@
      <property name="text">
       <string>Record Video...</string>
      </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QPushButton" name="pushButtonSaveFrame">
+     <property name="text">
+      <string>Save Frame...</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Split Video Recording</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="lineEditSuffix_2"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelSequenceStart_2">
+        <property name="text">
+         <string>Index</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelSequenceSuffix_2">
+        <property name="text">
+         <string>Sufffix</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSpinBox" name="spinBoxSequenceStart_2">
+        <property name="maximum">
+         <number>999999999</number>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Length</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSpinBox" name="spinBox">
+        <property name="suffix">
+         <string> s</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
   </layout>
