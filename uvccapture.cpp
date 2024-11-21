@@ -327,8 +327,9 @@ int UVCCapture::openDevice(int vid, int pid, QString serial_number)
     initUVC();
 
     qDebug()<<"Opening UVC device vid:"<<vid<<"pid"<<pid<<"sn"<<serial_number;
-    //m_error = uvc_find_device(m_context, &m_dev,vid, pid, nullptr); /* filter devices: vendor_id, product_id, "serial_num" */
-    m_error = uvc_find_device(m_context, &m_dev, vid, pid, serial_number.toUtf8().constData()); /* filter devices: vendor_id, product_id, "serial_num" */
+    /* If serial number is detected, filter devices by: vendor_id, product_id, and serial_number */
+    const char* sn = serial_number.isEmpty() ? nullptr : serial_number.toUtf8().constData();
+    m_error = uvc_find_device(m_context, &m_dev, vid, pid, sn);
     if (m_error < 0) {
         handleError(m_error);
         uvc_perror(m_error, "uvc_find_device"); // no devices found

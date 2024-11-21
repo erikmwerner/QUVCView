@@ -1,5 +1,5 @@
 QT += core gui
-
+TARGET = QUVCView
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
@@ -57,6 +57,12 @@ macx {
     QMAKE_INFO_PLIST = Info.plist
     CONFIG += app_bundle
     OPENCV_PATH = /opt/homebrew/Cellar/opencv/4.10.0_12/
+
+
+    #include OpenCV and automatically select version
+    OPENCV_PATH = $$files(/usr/local/Cellar/opencv/*)
+    message(Using OpenCV at: $$OPENCV_PATH)
+
     LIBS += -L/$$OPENCV_PATH/lib/ \
             -lopencv_core \
             -lopencv_imgproc \
@@ -66,6 +72,8 @@ macx {
     DEPENDPATH += $$OPENCV_PATH/include
 
     LIBUVC_PATH = /opt/homebrew/Cellar/libuvc/0.0.7/
+    LIBUVC_PATH = $$files(/usr/local/Cellar/libuvc/*)
+    message(Using libUVC at: $$LIBUVC_PATH)
     LIBS += -L/$$LIBUVC_PATH/lib/ \
             -luvc
 

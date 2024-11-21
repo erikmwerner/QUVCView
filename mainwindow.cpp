@@ -176,7 +176,6 @@ void MainWindow::showAbout()
     QString text(tr("QUVCView Version 0.3"));
     QString info_text(tr("Written 2020\nby Erik Werner with contributions from Falko Richter\nusing Qt 6.7.3, libuvc 0.0.7, and openCV 4.10."));
 
-
     //QMessageBox::about(this, title, text);
 
     QMessageBox message_box;

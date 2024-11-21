@@ -98,7 +98,7 @@ void VideoWriterWidget::on_pushButtonRecordVideo_clicked()
         else {
             dir = QStandardPaths::writableLocation(QStandardPaths::MoviesLocation);
         }
-        QString file_name = QFileDialog::getSaveFileName(this, tr("Save Frame"),
+        QString file_name = QFileDialog::getSaveFileName(this, tr("Save Video"),
                                                          dir, tr("Videos (*.mp4)"));
         if(!file_name.isEmpty()) {
             settings.setValue("lastVideoSaveLocation", file_name);
