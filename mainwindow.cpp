@@ -102,7 +102,7 @@ MainWindow::MainWindow(QWidget *parent)
     auto* action_settings = new QAction("Capture Settings", this);
         action_settings->setCheckable(true);
         action_settings->setChecked(true);
-        action_settings->setData( qVariantFromValue(static_cast<void *>(m_settings_widget)));
+        action_settings->setData(QVariant::fromValue(static_cast<void *>(m_settings_widget)));
         connect(action_settings,SIGNAL(triggered(bool)),
                 m_settings_widget,SLOT(setVisible(bool)));
         connect(m_settings_widget,SIGNAL(visibilityChanged(bool)),
@@ -121,7 +121,7 @@ MainWindow::MainWindow(QWidget *parent)
     auto* action_writer = new QAction("Video Writer", this);
         action_writer->setCheckable(true);
         action_writer->setChecked(true);
-        action_writer->setData( qVariantFromValue(static_cast<void *>(m_writer_widget)));
+        action_writer->setData(QVariant::fromValue(static_cast<void *>(m_writer_widget)));
         connect(action_writer,SIGNAL(triggered(bool)),
                 m_writer_widget,SLOT(setVisible(bool)));
         connect(m_writer_widget,SIGNAL(visibilityChanged(bool)),
@@ -174,8 +174,7 @@ void MainWindow::showAbout()
 {
     QString title(tr("About QUVCView"));
     QString text(tr("QUVCView Version 0.3"));
-    QString info_text(tr("Written 2020\nby Erik Werner\nusing Qt 5.15, libusb 0.0.6, and openCV 4.3."));
-
+    QString info_text(tr("Written 2020\nby Erik Werner with contributions from Falko Richter\nusing Qt 6.7.3, libuvc 0.0.7, and openCV 4.10."));
 
     //QMessageBox::about(this, title, text);
 

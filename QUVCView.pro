@@ -56,6 +56,8 @@ macx {
     ICON = icons/QUVCView.icns
     QMAKE_INFO_PLIST = Info.plist
     CONFIG += app_bundle
+    OPENCV_PATH = /opt/homebrew/Cellar/opencv/4.10.0_12/
+
 
     #include OpenCV and automatically select version
     OPENCV_PATH = $$files(/usr/local/Cellar/opencv/*)
@@ -69,6 +71,7 @@ macx {
     INCLUDEPATH += $$OPENCV_PATH/include/opencv4
     DEPENDPATH += $$OPENCV_PATH/include
 
+    LIBUVC_PATH = /opt/homebrew/Cellar/libuvc/0.0.7/
     LIBUVC_PATH = $$files(/usr/local/Cellar/libuvc/*)
     message(Using libUVC at: $$LIBUVC_PATH)
     LIBS += -L/$$LIBUVC_PATH/lib/ \
